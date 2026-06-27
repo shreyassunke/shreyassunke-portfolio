@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO -->
+    <title>Shreyas Sunke — Builder, Strategist, Technologist</title>
+    <meta name="description" content="Portfolio of Shreyas Sunke — building at the intersection of AI, finance, and design. University of Washington iSchool, Informatics." />
+    <meta name="author" content="Shreyas Sunke" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Shreyas Sunke — Builder, Strategist, Technologist" />
+    <meta property="og:description" content="Portfolio of Shreyas Sunke — building at the intersection of AI, finance, and design." />
+    <meta property="og:type" content="website" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Shreyas Sunke — Builder, Strategist, Technologist" />
+    <meta name="twitter:description" content="Portfolio of Shreyas Sunke — building at the intersection of AI, finance, and design." />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Preconnect to Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  </head>
+
+  <body>
+    <!-- ═══════════════════════════════════════════
+         THREE.JS CANVAS — fixed behind content
+         The ONLY canvas. The ONLY render target.
+         ═══════════════════════════════════════════ -->
+    <canvas id="webgl"></canvas>
+
+    <!-- ═══════════════════════════════════════════
+         CONTENT LAYER — scrollable HTML over canvas
+         ═══════════════════════════════════════════ -->
+    <div class="content">
+
+      <!-- ── HERO ── -->
+      <section id="hero" class="hero" aria-label="Hero">
+        <h1 class="hero__name">Shreyas Sunke</h1>
+        <p class="hero__tagline">Software Developer</p>
+
+        <div class="scroll-indicator" aria-hidden="true">
+          <span class="scroll-indicator__text">Scroll</span>
+          <span class="scroll-indicator__line"></span>
+        </div>
+      </section>
+
+      <!-- ── PROJECTS ── -->
+      <section id="projects" class="section projects" aria-label="Projects">
+        <span class="section__label">Selected Work</span>
+        <h2 class="section__title">Projects</h2>
+
+        <div class="project-card">
+          <h3 class="project-card__title">ATLAS</h3>
+          <p class="project-card__description">A global intelligence platform for real-time geopolitical and financial signal aggregation, analysis, and decision support.</p>
+          <p class="project-card__meta">AI · Data Infrastructure · Intelligence</p>
+        </div>
+
+        <div class="project-card">
+          <h3 class="project-card__title">Project Two</h3>
+          <p class="project-card__description">Description pending — curated project showcase.</p>
+          <p class="project-card__meta">Coming Soon</p>
+        </div>
+
+        <div class="project-card">
+          <h3 class="project-card__title">Project Three</h3>
+          <p class="project-card__description">Description pending — curated project showcase.</p>
+          <p class="project-card__meta">Coming Soon</p>
+        </div>
+      </section>
+
+      <!-- ── EXPERIENCE & EDUCATION ── -->
+      <section id="experience" class="section experience" aria-label="Experience and Education">
+        <span class="section__label">Background</span>
+        <h2 class="section__title">Experience &amp; Education</h2>
+
+        <!-- Education -->
+        <div class="education-item">
+          <h3 class="education-item__school">University of Washington — iSchool</h3>
+          <p class="education-item__degree">BS Informatics · Expected Autumn 2026</p>
+        </div>
+
+        <div class="education-item">
+          <h3 class="education-item__school">Indiana University — Luddy School</h3>
+          <p class="education-item__degree">Informatics</p>
+        </div>
+
+        <!-- Experience -->
+        <div class="experience-item">
+          <h3 class="experience-item__role">Role Title</h3>
+          <p class="experience-item__org">Company · Finance</p>
+          <p class="experience-item__period">2024 — Present</p>
+        </div>
+
+        <div class="experience-item">
+          <h3 class="experience-item__role">Role Title</h3>
+          <p class="experience-item__org">Company · Consulting</p>
+          <p class="experience-item__period">2023 — 2024</p>
+        </div>
+
+        <div class="experience-item">
+          <h3 class="experience-item__role">Role Title</h3>
+          <p class="experience-item__org">Company · AI</p>
+          <p class="experience-item__period">2023 — Present</p>
+        </div>
+      </section>
+
+      <!-- ── CONTACT ── -->
+      <section id="contact" class="section contact" aria-label="Contact">
+        <h2 class="contact__heading">Let's connect.</h2>
+        <p class="contact__text">Open to new opportunities, collaborations, and conversations about technology and strategy.</p>
+
+        <!-- Contact Form -->
+        <form class="contact__form" id="contact-form" onsubmit="event.preventDefault(); alert('Message sent successfully (demonstration only)!');">
+          <div class="contact__form-row">
+            <div class="contact__form-group">
+              <label for="name" class="contact__form-label">Name</label>
+              <input type="text" id="name" name="name" class="contact__form-input" placeholder="Your Name" required />
+            </div>
+            <div class="contact__form-group">
+              <label for="email" class="contact__form-label">Email</label>
+              <input type="email" id="email" name="email" class="contact__form-input" placeholder="name@company.com" required />
+            </div>
+          </div>
+          <div class="contact__form-group">
+            <label for="message" class="contact__form-label">Message</label>
+            <textarea id="message" name="message" class="contact__form-input contact__form-textarea" placeholder="Describe your project, role, or proposal..." rows="4" required></textarea>
+          </div>
+          <button type="submit" class="contact__form-submit">Send Message</button>
+        </form>
+
+        <div class="contact__socials">
+          <a href="mailto:shreyas@example.com" class="contact__link" aria-label="Send email">
+            Email
+          </a>
+          <a href="https://linkedin.com/in/" class="contact__link" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn profile">
+            LinkedIn
+          </a>
+          <a href="https://github.com/" class="contact__link" target="_blank" rel="noopener noreferrer" aria-label="GitHub profile">
+            GitHub
+          </a>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Entry point -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
