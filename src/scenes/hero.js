@@ -65,7 +65,8 @@ const logoNames = [
   'javascript', 'nodejs', 'threejs', 'cursor', 'antigravity'
 ];
 const logoMaterials = logoNames.map(name => {
-  const tex = textureLoader.load(`/assets/logos/${name}.svg`);
+  const ext = name === 'antigravity' ? 'png' : 'svg';
+  const tex = textureLoader.load(`/assets/logos/${name}.${ext}`);
   return new THREE.MeshBasicMaterial({
     map: tex,
     transparent: true,
