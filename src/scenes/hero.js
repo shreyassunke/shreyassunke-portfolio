@@ -61,7 +61,7 @@ heroGroup.add(wireframe);
 // ── Logos ──
 const textureLoader = new THREE.TextureLoader();
 const logoNames = [
-  'University_of_Washington_Block_W_logo_RGB_brand_colors', 'iu', 'harvard', 'ktp-logo', 'python',
+  'University_of_Washington_Block_W_logo_RGB_brand_colors', 'iu', 'harvard', 'ktp_logo', 'python',
   'javascript', 'nodejs', 'threejs', 'cursor', 'antigravity'
 ];
 const logoMaterials = logoNames.map(name => {
@@ -83,8 +83,8 @@ const faces = [];
 if (indexAttr) {
   for (let i = 0; i < indexAttr.count; i += 3) {
     const a = indexAttr.getX(i);
-    const b = indexAttr.getX(i+1);
-    const c = indexAttr.getX(i+2);
+    const b = indexAttr.getX(i + 1);
+    const c = indexAttr.getX(i + 2);
     faces.push([
       new THREE.Vector3(posAttr.getX(a), posAttr.getY(a), posAttr.getZ(a)),
       new THREE.Vector3(posAttr.getX(b), posAttr.getY(b), posAttr.getZ(b)),
@@ -95,8 +95,8 @@ if (indexAttr) {
   for (let i = 0; i < posAttr.count; i += 3) {
     faces.push([
       new THREE.Vector3(posAttr.getX(i), posAttr.getY(i), posAttr.getZ(i)),
-      new THREE.Vector3(posAttr.getX(i+1), posAttr.getY(i+1), posAttr.getZ(i+1)),
-      new THREE.Vector3(posAttr.getX(i+2), posAttr.getY(i+2), posAttr.getZ(i+2))
+      new THREE.Vector3(posAttr.getX(i + 1), posAttr.getY(i + 1), posAttr.getZ(i + 1)),
+      new THREE.Vector3(posAttr.getX(i + 2), posAttr.getY(i + 2), posAttr.getZ(i + 2))
     ]);
   }
 }
@@ -106,24 +106,24 @@ for (let i = 0; i < 10; i++) {
   // We have 20 faces, so placing on every other face (0, 2, 4...)
   const faceIndex = i * 2;
   if (faceIndex >= faces.length) break;
-  
+
   const vA = faces[faceIndex][0];
   const vB = faces[faceIndex][1];
   const vC = faces[faceIndex][2];
-  
+
   // Centroid
   const centroid = new THREE.Vector3()
     .addVectors(vA, vB).add(vC).divideScalar(3);
-    
+
   // Outward normal (since centered at origin, centroid vector is the normal)
   const outwardNormal = centroid.clone().normalize();
-  
+
   const mesh = new THREE.Mesh(planeGeom, logoMaterials[i]);
   // Offset slightly outward to avoid z-fighting
   mesh.position.copy(centroid).add(outwardNormal.clone().multiplyScalar(0.02));
   // Look away from center
   mesh.lookAt(centroid.clone().add(outwardNormal));
-  
+
   heroGroup.add(mesh);
 }
 
@@ -169,11 +169,11 @@ function onMouseMove(event) {
       x: event.clientX - previousMousePosition.x,
       y: event.clientY - previousMousePosition.y
     };
-    
+
     // Drag rotation speed factor
     baseRotation.y += deltaMove.x * 0.005;
     baseRotation.x += deltaMove.y * 0.005;
-    
+
     previousMousePosition = { x: event.clientX, y: event.clientY };
   }
 }
@@ -208,7 +208,7 @@ export function initHero() {
 function updateHero(elapsedTime, deltaTime) {
   // ── Idle rotation ──
   const isIdle = (Date.now() - lastInteractionTime) > 2000;
-  
+
   if (!prefersReducedMotion && !isDragging) {
     if (isIdle) {
       // Faster constant rotation to spin 360 degrees when left idle
