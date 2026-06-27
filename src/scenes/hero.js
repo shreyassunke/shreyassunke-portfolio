@@ -61,7 +61,7 @@ heroGroup.add(wireframe);
 // ── Logos ──
 const textureLoader = new THREE.TextureLoader();
 const logoNames = [
-  'University_of_Washington_Block_W_logo_RGB_brand_colors', 'iu', 'harvard', 'ktp_logo', 'python',
+  'University_of_Washington_Block_W_logo_RGB_brand_colors', 'iu_logo', 'harvard', 'ktp_logo', 'python',
   'javascript', 'nodejs', 'threejs', 'cursor', 'antigravity'
 ];
 const logoMaterials = logoNames.map(name => {
