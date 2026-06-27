@@ -141,7 +141,7 @@ pointLight.position.set(heroParams.lightOrbitRadius, 0, 0);
 // on the side facing away from the point light
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.08);
 
-// ── Mouse Interaction ──
+// ── Mouse & Touch Interaction ──
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
 const baseRotation = { x: 0, y: 0 };
@@ -179,6 +179,40 @@ function onMouseMove(event) {
   }
 }
 
+function onTouchStart(event) {
+  if (event.touches.length === 1) {
+    isDragging = true;
+    resetIdleTimer();
+    previousMousePosition = {
+      x: event.touches[0].clientX,
+      y: event.touches[0].clientY
+    };
+  }
+}
+
+function onTouchEnd() {
+  isDragging = false;
+  resetIdleTimer();
+}
+
+function onTouchMove(event) {
+  resetIdleTimer();
+  if (isDragging && event.touches.length === 1) {
+    const deltaMove = {
+      x: event.touches[0].clientX - previousMousePosition.x,
+      y: event.touches[0].clientY - previousMousePosition.y
+    };
+
+    baseRotation.y += deltaMove.x * 0.005;
+    baseRotation.x += deltaMove.y * 0.005;
+
+    previousMousePosition = {
+      x: event.touches[0].clientX,
+      y: event.touches[0].clientY
+    };
+  }
+}
+
 /**
  * Initialize the hero scene.
  * Adds objects to the Three.js scene and registers the animation tick.
@@ -197,6 +231,12 @@ export function initHero() {
   window.addEventListener('mouseup', onMouseUp);
   window.addEventListener('mouseleave', onMouseUp);
   window.addEventListener('mousemove', onMouseMove, { passive: true });
+
+  // Listen for touch events
+  window.addEventListener('touchstart', onTouchStart, { passive: true });
+  window.addEventListener('touchend', onTouchEnd, { passive: true });
+  window.addEventListener('touchcancel', onTouchEnd, { passive: true });
+  window.addEventListener('touchmove', onTouchMove, { passive: true });
 
   // Register animation callback with the single render loop
   onTick(updateHero);

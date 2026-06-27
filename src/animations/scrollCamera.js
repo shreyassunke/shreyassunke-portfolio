@@ -28,49 +28,131 @@ gsap.registerPlugin(ScrollTrigger);
 export function initScrollCamera() {
   if (prefersReducedMotion) {
     // For reduced motion, camera stays in a single position
-    // that works for all sections — shifted slightly right to frame offset icosahedron
-    camera.position.set(0.8, 0, 5);
+    // that works for all sections
+    camera.position.set(window.innerWidth < 768 ? 0 : 0.8, 0, 5);
+    camera.lookAt(window.innerWidth < 768 ? 0 : 0.8, 0, 0);
     return;
   }
 
-  // ── Master timeline tied to overall scroll progress ──
-  const tl = gsap.timeline({
-    scrollTrigger: {
-      trigger: '.content',
-      start: 'top top',
-      end: 'bottom bottom',
-      scrub: 1.5, // Smooth interpolation with slight delay
-    },
+  const mm = gsap.matchMedia();
+
+  // ── Desktop Setup (>= 768px) ──
+  mm.add("(min-width: 768px)", () => {
+    // Position icosahedron on the right side of the viewport
+    heroGroup.position.set(2.5, 0.3, 0);
+    heroGroup.scale.set(1.0, 1.0, 1.0);
+    camera.position.set(0.8, 0, 5);
+    camera.lookAt(0.8, 0, 0);
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: '.content',
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 1.5, // Smooth interpolation with slight delay
+      },
+    });
+
+    // Hero → Projects: camera pulls back and shifts slightly right
+    tl.to(camera.position, {
+      x: 2.0,
+      y: 0.5,
+      z: 7,
+      duration: 1,
+      ease: 'none',
+    }, 0);
+
+    // Projects → Experience: camera continues drifting
+    tl.to(camera.position, {
+      x: 0.5,
+      y: 1.0,
+      z: 9,
+      duration: 1,
+      ease: 'none',
+    }, 1);
+
+    // Experience → Contact: camera pulls way back
+    tl.to(camera.position, {
+      x: 0.8,
+      y: 0.5,
+      z: 12,
+      duration: 1,
+      ease: 'none',
+    }, 2);
+
+    // Scale down the hero object as user scrolls away from hero section
+    gsap.to(heroGroup.scale, {
+      x: 0.6,
+      y: 0.6,
+      z: 0.6,
+      scrollTrigger: {
+        trigger: '#projects',
+        start: 'top bottom',
+        end: 'top center',
+        scrub: 1,
+      },
+    });
   });
 
-  // Hero → Projects: camera pulls back and shifts slightly right
-  tl.to(camera.position, {
-    x: 2.0,
-    y: 0.5,
-    z: 7,
-    duration: 1,
-    ease: 'none',
-  }, 0);
+  // ── Mobile Setup (< 768px) ──
+  mm.add("(max-width: 767px)", () => {
+    // Centered and higher up to complement mobile stacked layout
+    heroGroup.position.set(0, 1.2, 0);
+    heroGroup.scale.set(0.7, 0.7, 0.7);
+    camera.position.set(0, 0.5, 5.5);
+    camera.lookAt(0, 0.5, 0);
 
-  // Projects → Experience: camera continues drifting
-  tl.to(camera.position, {
-    x: 0.5,
-    y: 1.0,
-    z: 9,
-    duration: 1,
-    ease: 'none',
-  }, 1);
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: '.content',
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 1.5,
+      },
+    });
 
-  // Experience → Contact: camera pulls way back
-  tl.to(camera.position, {
-    x: 0.8,
-    y: 0.5,
-    z: 12,
-    duration: 1,
-    ease: 'none',
-  }, 2);
+    // Hero → Projects: camera pulls back slightly
+    tl.to(camera.position, {
+      x: 0,
+      y: 0.2,
+      z: 7.5,
+      duration: 1,
+      ease: 'none',
+    }, 0);
 
-  // Rotate the hero object subtly as user scrolls past
+    // Projects → Experience: camera continues pulling back, lowers slightly
+    tl.to(camera.position, {
+      x: 0,
+      y: -0.4,
+      z: 9.5,
+      duration: 1,
+      ease: 'none',
+    }, 1);
+
+    // Experience → Contact: camera pulls way back
+    tl.to(camera.position, {
+      x: 0,
+      y: 0.1,
+      z: 11.5,
+      duration: 1,
+      ease: 'none',
+    }, 2);
+
+    // Scale down the hero object as user scrolls away from hero section on mobile
+    gsap.to(heroGroup.scale, {
+      x: 0.35,
+      y: 0.35,
+      z: 0.35,
+      scrollTrigger: {
+        trigger: '#projects',
+        start: 'top bottom',
+        end: 'top center',
+        scrub: 1,
+      },
+    });
+  });
+
+  // Rotate the hero object subtly as user scrolls past (common to both)
   gsap.to(heroGroup.rotation, {
     y: Math.PI * 2,  // Full rotation over entire scroll
     scrollTrigger: {
@@ -81,21 +163,7 @@ export function initScrollCamera() {
     },
   });
 
-  // Scale down the hero object as user scrolls away from hero section
-  gsap.to(heroGroup.scale, {
-    x: 0.6,
-    y: 0.6,
-    z: 0.6,
-    scrollTrigger: {
-      trigger: '#projects',
-      start: 'top bottom',
-      end: 'top center',
-      scrub: 1,
-    },
-  });
-
   // ── Section Reveal Animations ──
-  // Each section's content fades/slides in as it enters the viewport
 
   // Projects cards
   gsap.utils.toArray('.project-card').forEach((card, i) => {
@@ -117,7 +185,7 @@ export function initScrollCamera() {
   gsap.utils.toArray('.experience-item').forEach((item, i) => {
     gsap.from(item, {
       opacity: 0,
-      x: -30,
+      x: window.innerWidth < 768 ? -10 : -30, // Smaller horizontal offset on mobile to prevent clipping
       duration: 0.6,
       ease: 'power2.out',
       scrollTrigger: {

@@ -50,6 +50,11 @@ export function initDebug(effects) {
   heroFolder.add(heroParams, 'lerpFactor', 0.01, 0.2, 0.005).name('Lerp Smoothing');
   heroFolder.open();
 
+  // Collapse GUI by default on mobile screens to prevent cluttering
+  if (window.innerWidth < 768) {
+    gui.close();
+  }
+
   return gui;
 }
 
