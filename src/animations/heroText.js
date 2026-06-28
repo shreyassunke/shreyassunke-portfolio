@@ -93,14 +93,10 @@ export function initHeroText() {
     stagger: 0.03,
   });
 
-  // Fade in tagline after name animation
-  if (heroTagline) {
-    tl.to(heroTagline, {
-      opacity: 1,
-      duration: 1.0,
-      ease: 'power2.out',
-    }, '-=0.3'); // Overlap slightly with the end of character stagger
-  }
+  // NOTE: the tagline ("Software Developer") is intentionally NOT faded in
+  // anymore — the particle headline now morphs between the name and the role,
+  // so the tagline stays visually hidden (opacity:0) and exists purely for
+  // screen readers / SEO. See textParticles.js for the morph.
 
   // Fade in scroll indicator
   const scrollIndicator = document.querySelector('.scroll-indicator');

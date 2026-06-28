@@ -2,8 +2,15 @@
  * textParticles.js — Three.js Particle Text Interactive Wave Effect
  * ─────────────────────────────────────────────────────────────
  * Renders the hero text as a GPU-driven particle system on an overlay canvas.
- * When the user hovers over the text, particles near the mouse cursor
- * locally push away (wave distortion) and spring back.
+ *
+ * The same particle cloud morphs back and forth between two phrases
+ * ("Shreyas Sunke" ⇄ "Software Developer"): each particle holds an A-position
+ * and a B-position and the `uMorph` uniform cross-dissolves between them on a
+ * looping timeline (read one phrase, fade to the other, repeat forever).
+ *
+ * When the user hovers / touches the text, particles near the cursor locally
+ * push away (wave distortion) and the morph loop pauses so the current phrase
+ * can be read or selected; releasing resumes the loop.
  */
 
 import * as THREE from 'three';
@@ -17,6 +24,8 @@ let isInitialized = false;
 let heroElement = null;
 let overlayPadding = 100; // kept in sync so we can reposition on scroll
 let overlayCssWidth = 0;  // CSS width of the overlay, used to keep it centered
+let phrases = [];         // the two strings the cloud morphs between
+let morphTimeline = null; // looping GSAP timeline driving uMorph
 
 // Uniforms object (mutated by GSAP and mouse events)
 const uniforms = {
@@ -25,6 +34,8 @@ const uniforms = {
   uMouse:      { value: new THREE.Vector2(-999, -999) }, // Pixel coords within canvas
   uResolution: { value: new THREE.Vector2(1, 1) },
   uDPR:        { value: 1.0 },
+  uMorph:      { value: 0.0 }, // 0 = phrase A, 1 = phrase B
+  uScatter:    { value: 0.0 }, // mid-transition puff distance (set on init)
 };
 
 // ── Configuration ──
@@ -36,27 +47,46 @@ const PARTICLE_SIZE_MAX = 1.5;
 const TEXT_LETTER_SPACING_EM = -0.025; // matches --type-display-lg-ls in CSS
 const TEXT_WIDTH_BUFFER = 8;       // px of slack so the final glyph never clips
 
+// ── Morph timing ──
+const HOLD_DURATION = 5.0;         // seconds each phrase stays fully readable
+const TRANSITION_DURATION = 1.15;  // seconds to cross-dissolve between phrases
+const MORPH_SCATTER = 0.28;        // fraction of each particle's random offset puffed mid-transition
+
 // ────────────────────────────────────────────────────────
 // GLSL Shaders
 // ────────────────────────────────────────────────────────
 
 const vertexShader = /* glsl */ `
   attribute float aSize;
-  attribute float aAlpha;
   attribute vec3 aRandomOffset;
+  attribute vec3 aPositionB;  // home position for phrase B
+  attribute float aAlphaA;    // 1 if this particle belongs to phrase A
+  attribute float aAlphaB;    // 1 if this particle belongs to phrase B
 
   uniform float uHoverState;
   uniform float uTime;
   uniform vec2 uMouse;
   uniform vec2 uResolution;
   uniform float uDPR;
+  uniform float uMorph;       // 0 = phrase A, 1 = phrase B
+  uniform float uScatter;     // px of mid-transition puff
 
   varying float vAlpha;
   varying vec3 vColor;
 
   void main() {
-    // Home position (text glyph location)
-    vec3 home = position;
+    // ── Morph between the two phrase layouts ──
+    // Slide each particle from its A home to its B home, while cross-fading
+    // visibility so glyphs that only exist in one phrase fade in/out cleanly.
+    vec3 home = mix(position, aPositionB, uMorph);
+    float morphAlpha = mix(aAlphaA, aAlphaB, uMorph);
+
+    // Bell curve peaking at the midpoint of the transition (0 at both ends).
+    float transition = sin(uMorph * 3.14159265);
+
+    // Organic outward puff so the swap reads as a dissolve, not a rigid slide.
+    home.xy += aRandomOffset.xy * transition * uScatter;
+
     vec3 finalPos = home;
 
     // ── Interaction Logic ──
@@ -81,15 +111,13 @@ const vertexShader = /* glsl */ `
       finalPos.z += force * aRandomOffset.z * 0.5;
     }
 
-    // Size increases slightly when pushed
-    float sizeMult = 1.0 + force * 2.0;
+    // Size increases slightly when pushed; shrinks a touch mid-transition.
+    float sizeMult = (1.0 + force * 2.0) * (1.0 - transition * 0.25);
     gl_PointSize = aSize * sizeMult * uDPR;
 
     // ── Color and Alpha ──
     vColor = vec3(1.0, 1.0, 1.0); // Pure white text
-    
-    // Always fully visible (since the particles ARE the text)
-    vAlpha = aAlpha;
+    vAlpha = morphAlpha;
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(finalPos, 1.0);
   }
@@ -146,12 +174,14 @@ function sampleTextPixels(text, fontSize, maxWidth, maxHeight) {
   }
   ctx.fillStyle = '#FFFFFF';
   ctx.textBaseline = 'top';
-  ctx.textAlign = 'left';
+  // Center each phrase within the (shared, widest) sample canvas so both
+  // phrases morph around the same midpoint.
+  ctx.textAlign = 'center';
 
   const textHeight = fontSize * scale;
   const y = (maxHeight * scale - textHeight) / 2;
 
-  ctx.fillText(text, 0, y);
+  ctx.fillText(text, (maxWidth * scale) / 2, y);
 
   const imageData = ctx.getImageData(0, 0, maxWidth * scale, maxHeight * scale);
   const pixels = imageData.data;
@@ -176,20 +206,45 @@ function sampleTextPixels(text, fontSize, maxWidth, maxHeight) {
 // Particle System Creation
 // ────────────────────────────────────────────────────────
 
-function createParticleSystem(positions) {
-  const count = positions.length;
+/**
+ * Build the particle cloud from TWO phrase layouts.
+ *
+ * The cloud holds `max(countA, countB)` particles. Each particle is given a
+ * home for phrase A (`position`) and a home for phrase B (`aPositionB`).
+ * Particles that only exist in one phrase reuse the other phrase's position as
+ * a stationary anchor and simply fade in/out (driven by aAlphaA / aAlphaB),
+ * so morphing never flings stray particles across the screen.
+ */
+function createParticleSystem(positionsA, positionsB) {
+  const countA = positionsA.length;
+  const countB = positionsB.length;
+  const count = Math.max(countA, countB);
 
-  const positionArray = new Float32Array(count * 3);
+  const positionArray = new Float32Array(count * 3); // phrase A homes
+  const positionBArray = new Float32Array(count * 3); // phrase B homes
   const randomOffsetArray = new Float32Array(count * 3);
   const sizeArray = new Float32Array(count);
-  const alphaArray = new Float32Array(count);
+  const alphaAArray = new Float32Array(count);
+  const alphaBArray = new Float32Array(count);
 
   for (let i = 0; i < count; i++) {
     const i3 = i * 3;
 
-    positionArray[i3] = positions[i].x;
-    positionArray[i3 + 1] = positions[i].y;
+    const hasA = i < countA;
+    const hasB = i < countB;
+
+    // Missing side anchors to the present side so unmatched particles fade
+    // in place rather than sliding from off-screen.
+    const a = hasA ? positionsA[i] : positionsB[i];
+    const b = hasB ? positionsB[i] : positionsA[i];
+
+    positionArray[i3] = a.x;
+    positionArray[i3 + 1] = a.y;
     positionArray[i3 + 2] = 0;
+
+    positionBArray[i3] = b.x;
+    positionBArray[i3 + 1] = b.y;
+    positionBArray[i3 + 2] = 0;
 
     const angle = Math.random() * Math.PI * 2;
     const distance = 80 * Math.random(); // Fly further
@@ -198,15 +253,18 @@ function createParticleSystem(positions) {
     randomOffsetArray[i3 + 2] = (Math.random() - 0.5) * 80;
 
     sizeArray[i] = PARTICLE_SIZE_MIN + Math.random() * (PARTICLE_SIZE_MAX - PARTICLE_SIZE_MIN);
-    // Make alpha 1.0 so the text looks completely solid
-    alphaArray[i] = 1.0;
+
+    alphaAArray[i] = hasA ? 1.0 : 0.0;
+    alphaBArray[i] = hasB ? 1.0 : 0.0;
   }
 
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positionArray, 3));
+  geometry.setAttribute('aPositionB', new THREE.BufferAttribute(positionBArray, 3));
   geometry.setAttribute('aRandomOffset', new THREE.BufferAttribute(randomOffsetArray, 3));
   geometry.setAttribute('aSize', new THREE.BufferAttribute(sizeArray, 1));
-  geometry.setAttribute('aAlpha', new THREE.BufferAttribute(alphaArray, 1));
+  geometry.setAttribute('aAlphaA', new THREE.BufferAttribute(alphaAArray, 1));
+  geometry.setAttribute('aAlphaB', new THREE.BufferAttribute(alphaBArray, 1));
 
   const material = new THREE.ShaderMaterial({
     vertexShader,
@@ -221,6 +279,19 @@ function createParticleSystem(positions) {
   return new THREE.Points(geometry, material);
 }
 
+/**
+ * Sample a single phrase's glyph pixels into particle home positions,
+ * offset into the padded overlay space. Shared by init and resize.
+ */
+function samplePhrasePositions(text, fontSize, sampleWidth, sampleHeight, padding) {
+  const positions = sampleTextPixels(text, fontSize, sampleWidth, sampleHeight);
+  for (const pos of positions) {
+    pos.x += padding;
+    pos.y += padding;
+  }
+  return positions;
+}
+
 // ────────────────────────────────────────────────────────
 // Overlay Canvas Setup
 // ────────────────────────────────────────────────────────
@@ -230,6 +301,27 @@ function createOverlay() {
   overlayCanvas.classList.add('particle-canvas');
   document.body.appendChild(overlayCanvas);
   return overlayCanvas;
+}
+
+// Mobile uses the centered hero layout (see the max-width:768px rules in
+// main.css). Keep this breakpoint in sync with that CSS.
+const mobileLayoutQuery = typeof window.matchMedia === 'function'
+  ? window.matchMedia('(max-width: 768px)')
+  : { matches: false };
+
+/**
+ * Horizontal centre the overlay should align to.
+ * - Mobile (centered hero): the true viewport centre, so both phrases stay
+ *   perfectly centered on the device screen regardless of how the char-split
+ *   <h1> happens to measure.
+ * - Desktop (left-aligned hero): the element's own centre, preserving the
+ *   intentional left-of-screen placement.
+ */
+function overlayAnchorX(rect) {
+  if (mobileLayoutQuery.matches) {
+    return window.innerWidth / 2;
+  }
+  return rect.left + rect.width / 2;
 }
 
 function positionOverlay(heroEl, contentWidth) {
@@ -247,10 +339,7 @@ function positionOverlay(heroEl, contentWidth) {
   overlayCanvas.height = Math.ceil(height * Math.min(window.devicePixelRatio, 2));
   overlayCanvas.style.width = `${width}px`;
   overlayCanvas.style.height = `${height}px`;
-  // Anchor on the element's horizontal CENTRE (not its left edge) so the
-  // particle text stays centered even when the canvas-measured text width
-  // differs slightly from the element's CSS layout width.
-  overlayCanvas.style.left = `${rect.left + rect.width / 2 - width / 2}px`;
+  overlayCanvas.style.left = `${overlayAnchorX(rect) - width / 2}px`;
   overlayCanvas.style.top = `${rect.top - padding}px`;
 
   return { width, height, padding, rect };
@@ -264,8 +353,8 @@ function positionOverlay(heroEl, contentWidth) {
 function updateOverlayPosition() {
   if (!overlayCanvas || !heroElement) return;
   const rect = heroElement.getBoundingClientRect();
-  // Keep the overlay centered on the element (see positionOverlay).
-  overlayCanvas.style.left = `${rect.left + rect.width / 2 - overlayCssWidth / 2}px`;
+  // Keep the overlay centered on its anchor (see positionOverlay).
+  overlayCanvas.style.left = `${overlayAnchorX(rect) - overlayCssWidth / 2}px`;
   overlayCanvas.style.top = `${rect.top - overlayPadding}px`;
 }
 
@@ -283,20 +372,25 @@ export function initTextParticles() {
 
   const computedStyle = window.getComputedStyle(heroElement);
   const fontSize = parseFloat(computedStyle.fontSize);
-  const text = heroElement.getAttribute('aria-label') || heroElement.textContent.replace(/\u00a0/g, ' ');
 
-  const sampleWidth = Math.ceil(measureTextWidth(text, fontSize)) + TEXT_WIDTH_BUFFER;
+  // Phrase A is the hero name itself; phrase B is the (now visually hidden)
+  // tagline. Read both from the DOM so the markup stays the source of truth.
+  const phraseA = heroElement.getAttribute('aria-label') || heroElement.textContent.replace(/\u00a0/g, ' ');
+  const taglineEl = document.querySelector('.hero__tagline');
+  const phraseB = (taglineEl && taglineEl.textContent.trim()) || phraseA;
+  phrases = [phraseA, phraseB];
+
+  // Size the overlay to fit the WIDER of the two phrases so neither clips.
+  const widthA = measureTextWidth(phraseA, fontSize);
+  const widthB = measureTextWidth(phraseB, fontSize);
+  const sampleWidth = Math.ceil(Math.max(widthA, widthB)) + TEXT_WIDTH_BUFFER;
   const { width, height, padding } = positionOverlay(heroElement, sampleWidth);
 
   const sampleHeight = Math.ceil(height - padding * 2);
-  const positions = sampleTextPixels(text, fontSize, sampleWidth, sampleHeight);
+  const positionsA = samplePhrasePositions(phraseA, fontSize, sampleWidth, sampleHeight, padding);
+  const positionsB = samplePhrasePositions(phraseB, fontSize, sampleWidth, sampleHeight, padding);
 
-  if (positions.length === 0) return;
-
-  for (const pos of positions) {
-    pos.x += padding;
-    pos.y += padding;
-  }
+  if (positionsA.length === 0 || positionsB.length === 0) return;
 
   const dpr = Math.min(window.devicePixelRatio, 2);
   renderer = new THREE.WebGLRenderer({
@@ -313,7 +407,8 @@ export function initTextParticles() {
   particleScene = new THREE.Scene();
 
   uniforms.uResolution.value.set(width, height);
-  particleMesh = createParticleSystem(positions);
+  uniforms.uScatter.value = MORPH_SCATTER;
+  particleMesh = createParticleSystem(positionsA, positionsB);
   particleScene.add(particleMesh);
 
   // Particle overlay is always active and visible
@@ -338,7 +433,37 @@ export function initTextParticles() {
   window.addEventListener('resize', handleResize);
 
   isInitialized = true;
+  startMorphCycle();
   renderLoop();
+}
+
+// ────────────────────────────────────────────────────────
+// Morph Cycle
+// ────────────────────────────────────────────────────────
+
+/**
+ * Loop forever: hold phrase A → dissolve to phrase B → hold B → dissolve back.
+ * Hovering / touching the text pauses this timeline (see hover handlers).
+ */
+function startMorphCycle() {
+  if (phrases.length < 2 || phrases[0] === phrases[1]) return;
+  if (morphTimeline) morphTimeline.kill();
+
+  uniforms.uMorph.value = 0;
+  morphTimeline = gsap.timeline({ repeat: -1 });
+  morphTimeline
+    .to(uniforms.uMorph, {
+      value: 1,
+      duration: TRANSITION_DURATION,
+      ease: 'power2.inOut',
+      delay: HOLD_DURATION,
+    })
+    .to(uniforms.uMorph, {
+      value: 0,
+      duration: TRANSITION_DURATION,
+      ease: 'power2.inOut',
+      delay: HOLD_DURATION,
+    });
 }
 
 // ────────────────────────────────────────────────────────
@@ -363,6 +488,10 @@ function renderLoop() {
 let hoverTween = null;
 
 function onHoverStart(e) {
+  // Pause the phrase cycle so the user can read / select the current text
+  // for as long as they keep hovering or holding their finger down.
+  if (morphTimeline) morphTimeline.pause();
+
   // Overlay position is kept in sync every frame by updateOverlayPosition(),
   // so we only need to drive the hover state here.
   if (hoverTween) hoverTween.kill();
@@ -374,6 +503,9 @@ function onHoverStart(e) {
 }
 
 function onHoverEnd(e) {
+  // Resume the phrase cycle from wherever it left off.
+  if (morphTimeline) morphTimeline.resume();
+
   if (hoverTween) hoverTween.kill();
   // Move mouse out of bounds so effect stops cleanly
   uniforms.uMouse.value.set(-999, -999);
@@ -433,18 +565,16 @@ function handleResize() {
 
   const computedStyle = window.getComputedStyle(heroElement);
   const fontSize = parseFloat(computedStyle.fontSize);
-  const text = heroElement.getAttribute('aria-label') || heroElement.textContent.replace(/\u00a0/g, ' ');
-  const sampleWidth = Math.ceil(measureTextWidth(text, fontSize)) + TEXT_WIDTH_BUFFER;
+  const [phraseA, phraseB] = phrases;
+  const widthA = measureTextWidth(phraseA, fontSize);
+  const widthB = measureTextWidth(phraseB, fontSize);
+  const sampleWidth = Math.ceil(Math.max(widthA, widthB)) + TEXT_WIDTH_BUFFER;
   const { width, height, padding } = positionOverlay(heroElement, sampleWidth);
   const sampleHeight = Math.ceil(height - padding * 2);
-  const positions = sampleTextPixels(text, fontSize, sampleWidth, sampleHeight);
+  const positionsA = samplePhrasePositions(phraseA, fontSize, sampleWidth, sampleHeight, padding);
+  const positionsB = samplePhrasePositions(phraseB, fontSize, sampleWidth, sampleHeight, padding);
 
-  if (positions.length === 0) return;
-
-  for (const pos of positions) {
-    pos.x += padding;
-    pos.y += padding;
-  }
+  if (positionsA.length === 0 || positionsB.length === 0) return;
 
   renderer.setSize(width, height);
   camera.right = width;
@@ -452,6 +582,10 @@ function handleResize() {
   camera.updateProjectionMatrix();
 
   uniforms.uResolution.value.set(width, height);
-  particleMesh = createParticleSystem(positions);
+  uniforms.uScatter.value = MORPH_SCATTER;
+  particleMesh = createParticleSystem(positionsA, positionsB);
   particleScene.add(particleMesh);
+
+  // Rebuild invalidated the geometry the timeline was driving; restart it.
+  startMorphCycle();
 }
