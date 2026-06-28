@@ -554,15 +554,28 @@ body {
   font-weight: var(--type-body-md-weight);
   line-height: var(--type-body-md-lh);
   color: var(--color-muted);
-  padding-left: var(--space-4);
-  margin-bottom: var(--space-2);
+  padding-left: var(--space-6);
+  margin-bottom: var(--space-3);
 }
 
+/* Geometric diamond marker — echoes the wireframe icosahedron motif */
 .experience-item__details li::before {
-  content: "—";
+  content: "";
   position: absolute;
-  left: 0;
-  color: var(--color-accent-border);
+  left: 1px;
+  top: 0.78em;
+  width: 6px;
+  height: 6px;
+  background: var(--color-primary);
+  opacity: 0.45;
+  transform: translateY(-50%) rotate(45deg);
+  transition: opacity var(--duration-base) var(--ease-out),
+    background var(--duration-base) var(--ease-out);
+}
+
+/* Brighten the markers when the parent card is hovered */
+.experience-item:hover .experience-item__details li::before {
+  opacity: 0.85;
 }
 
 .experience-item__details li:last-child {
@@ -874,15 +887,17 @@ body {
   }
 
   .hero__name {
-    font-size: clamp(2.2rem, 8vw, var(--type-display-lg-size));
-    white-space: normal;
+    /* Stay on one line so the particle-text overlay (single line) stays
+       perfectly aligned; clamp keeps it fitting on small screens */
+    font-size: clamp(1.9rem, 8vw, var(--type-display-lg-size));
+    text-align: center;
   }
 
   /* Center the tagline (remove desktop optical left-offset) */
   .hero__tagline {
     padding-left: 0;
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%;
+    text-align: center;
   }
 
   /* Make containers tighter on mobile */

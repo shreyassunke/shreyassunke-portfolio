@@ -16,6 +16,7 @@ let overlayCanvas;
 let isInitialized = false;
 let heroElement = null;
 let overlayPadding = 100; // kept in sync so we can reposition on scroll
+let overlayCssWidth = 0;  // CSS width of the overlay, used to keep it centered
 
 // Uniforms object (mutated by GSAP and mouse events)
 const uniforms = {
@@ -240,12 +241,16 @@ function positionOverlay(heroEl, contentWidth) {
   const innerWidth = contentWidth != null ? contentWidth : rect.width;
   const width = innerWidth + padding * 2;
   const height = rect.height + padding * 2;
+  overlayCssWidth = width;
 
   overlayCanvas.width = Math.ceil(width * Math.min(window.devicePixelRatio, 2));
   overlayCanvas.height = Math.ceil(height * Math.min(window.devicePixelRatio, 2));
   overlayCanvas.style.width = `${width}px`;
   overlayCanvas.style.height = `${height}px`;
-  overlayCanvas.style.left = `${rect.left - padding}px`;
+  // Anchor on the element's horizontal CENTRE (not its left edge) so the
+  // particle text stays centered even when the canvas-measured text width
+  // differs slightly from the element's CSS layout width.
+  overlayCanvas.style.left = `${rect.left + rect.width / 2 - width / 2}px`;
   overlayCanvas.style.top = `${rect.top - padding}px`;
 
   return { width, height, padding, rect };
@@ -259,7 +264,8 @@ function positionOverlay(heroEl, contentWidth) {
 function updateOverlayPosition() {
   if (!overlayCanvas || !heroElement) return;
   const rect = heroElement.getBoundingClientRect();
-  overlayCanvas.style.left = `${rect.left - overlayPadding}px`;
+  // Keep the overlay centered on the element (see positionOverlay).
+  overlayCanvas.style.left = `${rect.left + rect.width / 2 - overlayCssWidth / 2}px`;
   overlayCanvas.style.top = `${rect.top - overlayPadding}px`;
 }
 
