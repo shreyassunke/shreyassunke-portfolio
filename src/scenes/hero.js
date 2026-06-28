@@ -261,23 +261,35 @@ const raycaster = new THREE.Raycaster();
 const _pointer = new THREE.Vector2();
 const CLICK_THRESHOLD = 6; // px — above this counts as a drag, not a tile click
 let pointerDownPos = null;
+// Mobile touch: tile toggles on touchstart; revert if the finger drags instead.
+let touchTileGesture = null;
+
+/**
+ * Raycast a screen point against the icosahedron and return the hit tile state.
+ */
+function raycastTileAt(clientX, clientY) {
+  _pointer.x = (clientX / window.innerWidth) * 2 - 1;
+  _pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(_pointer, camera);
+
+  const hit = raycaster.intersectObject(icosahedron, false)[0];
+  if (!hit || hit.faceIndex == null) return null;
+
+  const state = fillStates[hit.faceIndex];
+  if (!state) return null;
+
+  return { faceIndex: hit.faceIndex, state };
+}
 
 /**
  * Raycast a screen point against the icosahedron and toggle that tile's
  * contrast scheme (black/white ↔ white/black).
  */
 function toggleTileAt(clientX, clientY) {
-  _pointer.x = (clientX / window.innerWidth) * 2 - 1;
-  _pointer.y = -(clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(_pointer, camera);
+  const hit = raycastTileAt(clientX, clientY);
+  if (!hit) return;
 
-  const hit = raycaster.intersectObject(icosahedron, false)[0];
-  if (!hit || hit.faceIndex == null) return;
-
-  const state = fillStates[hit.faceIndex];
-  if (!state) return;
-
-  setTileActive(state, !state.active);
+  setTileActive(hit.state, !hit.state.active);
 }
 
 /** Toggle on tap/click; ignore if the pointer moved enough to spin the object. */
@@ -333,14 +345,21 @@ function onTouchStart(event) {
   resetIdleTimer();
   previousMousePosition = { x: touch.clientX, y: touch.clientY };
   pointerDownPos = { x: touch.clientX, y: touch.clientY };
+
+  // Mobile: toggle immediately on touch; undo if the user drags to rotate.
+  const hit = raycastTileAt(touch.clientX, touch.clientY);
+  if (hit) {
+    const revertActive = hit.state.active;
+    setTileActive(hit.state, !revertActive);
+    touchTileGesture = { state: hit.state, revertActive };
+  }
 }
 
-function onTouchEnd(event) {
+function onTouchEnd() {
   isDragging = false;
   resetIdleTimer();
-  const touch = event.changedTouches[0];
-  if (touch) tryToggleTile(touch.clientX, touch.clientY);
-  else pointerDownPos = null;
+  pointerDownPos = null;
+  touchTileGesture = null;
 }
 
 function onTouchMove(event) {
@@ -352,6 +371,19 @@ function onTouchMove(event) {
 
   resetIdleTimer();
   const touch = event.touches[0];
+
+  // Finger moved into a drag — revert the touchstart toggle so rotation stays clean.
+  if (touchTileGesture && pointerDownPos) {
+    const moved = Math.hypot(
+      touch.clientX - pointerDownPos.x,
+      touch.clientY - pointerDownPos.y
+    );
+    if (moved > CLICK_THRESHOLD) {
+      setTileActive(touchTileGesture.state, touchTileGesture.revertActive);
+      touchTileGesture = null;
+    }
+  }
+
   applyDrag(
     touch.clientX - previousMousePosition.x,
     touch.clientY - previousMousePosition.y
