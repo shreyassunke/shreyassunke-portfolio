@@ -29,6 +29,35 @@
 
   <body>
     <!-- ═══════════════════════════════════════════
+         SITE HEADER — fixed minimal nav (top right)
+         ═══════════════════════════════════════════ -->
+    <header class="site-header" aria-label="Site header">
+      <a href="#hero" class="site-header__mark" aria-label="Shreyas Sunke — home">SS</a>
+
+      <nav class="site-nav" aria-label="Primary">
+        <button
+          type="button"
+          class="nav-toggle"
+          id="navToggle"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+          aria-controls="navMenu"
+        >
+          <span class="nav-toggle__bar"></span>
+          <span class="nav-toggle__bar"></span>
+          <span class="nav-toggle__bar"></span>
+        </button>
+
+        <ul class="nav-menu" id="navMenu" role="menu" hidden>
+          <li role="none"><a role="menuitem" class="nav-menu__link" href="#projects">Projects</a></li>
+          <li role="none"><a role="menuitem" class="nav-menu__link" href="#experience">Experience</a></li>
+          <li role="none"><a role="menuitem" class="nav-menu__link" href="#skills">Skills</a></li>
+          <li role="none"><a role="menuitem" class="nav-menu__link" href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <!-- ═══════════════════════════════════════════
          THREE.JS CANVAS — fixed behind content
          The ONLY canvas. The ONLY render target.
          ═══════════════════════════════════════════ -->

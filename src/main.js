@@ -53,6 +53,9 @@ import { initScrollCamera } from './animations/scrollCamera.js';
 // ── 9.5. Hover Glow Effect ──
 import { initHoverGlow } from './animations/hoverGlow.js';
 
+// ── 9.6. Header / Nav ──
+import { initHeader } from './ui/header.js';
+
 // ── 10. Debug Panel ──
 import { initDebug } from './utils/debug.js';
 
@@ -84,6 +87,9 @@ function init() {
 
   // Mouse hover border illuminance tracking
   initHoverGlow();
+
+  // Minimal nav header (initials mark + dropdown)
+  initHeader();
 
   // Debug panel (dat.GUI) — comment out for production
   if (effects) {

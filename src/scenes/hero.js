@@ -63,7 +63,8 @@ heroGroup.add(wireframe);
 const textureLoader = new THREE.TextureLoader();
 const logoNames = [
   'University_of_Washington_Block_W_logo_RGB_brand_colors', 'iu_logo', 'harvard_logo', 'ktp_logo', 'python',
-  'javascript', 'nodejs', 'threejs', 'cursor', 'antigravity'
+  'javascript', 'nodejs', 'threejs', 'cursor', 'antigravity', 'ischool_logo', 'microsoft_logo', 'excel_logo',
+  'apple_logo', 'react_logo', 'nvidia_logo', 'usa_flag_logo', 'nchs_logo', 'googlecloud_logo', 'aws_logo'
 ];
 const logoMaterials = logoNames.map(name => {
   const ext = name === 'antigravity' ? 'png' : 'svg';
@@ -103,10 +104,15 @@ if (indexAttr) {
   }
 }
 
+// Maps a geometry faceIndex → the logo mesh sitting on that face (if any),
+// so the press-and-hold interaction can invert that logo from white to black.
+const logoByFace = new Map();
+
 const planeGeom = new THREE.PlaneGeometry(0.4, 0.4);
-for (let i = 0; i < 10; i++) {
-  // We have 20 faces, so placing on every other face (0, 2, 4...)
-  const faceIndex = i * 2;
+for (let i = 0; i < logoMaterials.length; i++) {
+  // 20 faces: fill every other face first (0, 2, 4…), then the alternates
+  // (1, 3, 5…) so additional logos beyond 10 still get their own face.
+  const faceIndex = i < 10 ? i * 2 : (i - 10) * 2 + 1;
   if (faceIndex >= faces.length) break;
 
   const vA = faces[faceIndex][0];
@@ -125,8 +131,63 @@ for (let i = 0; i < 10; i++) {
   mesh.position.copy(centroid).add(outwardNormal.clone().multiplyScalar(0.02));
   // Look away from center
   mesh.lookAt(centroid.clone().add(outwardNormal));
+  // Draw logos above the white fill overlay so the inverted (black) logo
+  // stays visible once the tile fills.
+  mesh.renderOrder = 2;
 
   heroGroup.add(mesh);
+  logoByFace.set(faceIndex, mesh);
+}
+
+// ── Tile click toggle ──
+// One white triangular overlay per face. Click/tap a tile to instantly flip it
+// white with an inverted (black) logo; click again to revert to black/white.
+const fillStates = []; // { mesh, material, logo, active }
+
+for (let faceIndex = 0; faceIndex < faces.length; faceIndex++) {
+  const [vA, vB, vC] = faces[faceIndex];
+
+  const outwardNormal = new THREE.Vector3()
+    .addVectors(vA, vB).add(vC).divideScalar(3).normalize();
+  // Lift the overlay just off the dark face (and below the logo at 0.02).
+  const lift = outwardNormal.clone().multiplyScalar(0.012);
+
+  const triGeom = new THREE.BufferGeometry();
+  triGeom.setAttribute('position', new THREE.Float32BufferAttribute([
+    vA.x + lift.x, vA.y + lift.y, vA.z + lift.z,
+    vB.x + lift.x, vB.y + lift.y, vB.z + lift.z,
+    vC.x + lift.x, vC.y + lift.y, vC.z + lift.z,
+  ], 3));
+  triGeom.computeVertexNormals();
+
+  const fillMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0,
+    depthTest: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+
+  const fillMesh = new THREE.Mesh(triGeom, fillMaterial);
+  fillMesh.renderOrder = 1;
+  fillMesh.visible = false; // skip rendering entirely while idle
+  heroGroup.add(fillMesh);
+
+  fillStates[faceIndex] = {
+    mesh: fillMesh,
+    material: fillMaterial,
+    logo: logoByFace.get(faceIndex) || null,
+    active: false,
+  };
+}
+
+/** Apply instant black/white ↔ white/black visual state for one tile. */
+function setTileActive(state, active) {
+  state.active = active;
+  state.material.opacity = active ? 1 : 0;
+  state.mesh.visible = active;
+  if (state.logo) state.logo.material.color.setScalar(active ? 0 : 1);
 }
 
 // ── Orbiting Point Light ──
@@ -195,6 +256,39 @@ function applyDrag(deltaX, deltaY) {
   rotationVelocity.x = rotX;
 }
 
+// ── Tile click toggle (raycast) ──
+const raycaster = new THREE.Raycaster();
+const _pointer = new THREE.Vector2();
+const CLICK_THRESHOLD = 6; // px — above this counts as a drag, not a tile click
+let pointerDownPos = null;
+
+/**
+ * Raycast a screen point against the icosahedron and toggle that tile's
+ * contrast scheme (black/white ↔ white/black).
+ */
+function toggleTileAt(clientX, clientY) {
+  _pointer.x = (clientX / window.innerWidth) * 2 - 1;
+  _pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(_pointer, camera);
+
+  const hit = raycaster.intersectObject(icosahedron, false)[0];
+  if (!hit || hit.faceIndex == null) return;
+
+  const state = fillStates[hit.faceIndex];
+  if (!state) return;
+
+  setTileActive(state, !state.active);
+}
+
+/** Toggle on tap/click; ignore if the pointer moved enough to spin the object. */
+function tryToggleTile(clientX, clientY) {
+  if (!pointerDownPos) return;
+  const moved = Math.hypot(clientX - pointerDownPos.x, clientY - pointerDownPos.y);
+  pointerDownPos = null;
+  if (moved > CLICK_THRESHOLD) return;
+  toggleTileAt(clientX, clientY);
+}
+
 // ── Mouse (desktop): drag anywhere to rotate ──
 function onMouseDown(event) {
   isDragging = true;
@@ -202,11 +296,17 @@ function onMouseDown(event) {
   rotationVelocity.y = 0;
   resetIdleTimer();
   previousMousePosition = { x: event.clientX, y: event.clientY };
+  pointerDownPos = { x: event.clientX, y: event.clientY };
 }
 
-function onMouseUp() {
+function onMouseUp(event) {
   isDragging = false;
   resetIdleTimer();
+  if (event?.clientX != null) {
+    tryToggleTile(event.clientX, event.clientY);
+  } else {
+    pointerDownPos = null;
+  }
 }
 
 function onMouseMove(event) {
@@ -232,11 +332,15 @@ function onTouchStart(event) {
   rotationVelocity.y = 0;
   resetIdleTimer();
   previousMousePosition = { x: touch.clientX, y: touch.clientY };
+  pointerDownPos = { x: touch.clientX, y: touch.clientY };
 }
 
-function onTouchEnd() {
+function onTouchEnd(event) {
   isDragging = false;
   resetIdleTimer();
+  const touch = event.changedTouches[0];
+  if (touch) tryToggleTile(touch.clientX, touch.clientY);
+  else pointerDownPos = null;
 }
 
 function onTouchMove(event) {
