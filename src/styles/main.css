@@ -122,6 +122,9 @@ body {
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.15s ease-out;
+  /* Override the global `canvas { max-width: 100% }` reset: the overlay is sized
+     and centred in JS, so a max-width clamp would shift the text off-centre. */
+  max-width: none;
 }
 
 .hero__tagline {

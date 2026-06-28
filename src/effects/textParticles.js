@@ -309,11 +309,11 @@ function createParticleSystem(positionsA, positionsB) {
  * Sample a single phrase's glyph pixels into particle home positions,
  * offset into the padded overlay space. Shared by init and resize.
  */
-function samplePhrasePositions(text, fontSize, sampleWidth, sampleHeight, padding) {
+function samplePhrasePositions(text, fontSize, sampleWidth, sampleHeight, xPadding, yPadding) {
   const positions = sampleTextPixels(text, fontSize, sampleWidth, sampleHeight);
   for (const pos of positions) {
-    pos.x += padding;
-    pos.y += padding;
+    pos.x += xPadding;
+    pos.y += yPadding;
   }
   return positions;
 }
@@ -363,12 +363,21 @@ function overlayAnchorX(rect) {
 
 function positionOverlay(heroEl, contentWidth) {
   const rect = heroEl.getBoundingClientRect();
-  const padding = 100; // Need padding so particles don't clip when pushed
+  const padding = 100; // vertical room so particles aren't clipped when pushed
   overlayPadding = padding;
   // Use the measured text width when available so the trailing glyph is never
   // clipped by the (potentially narrower) element box.
   const innerWidth = contentWidth != null ? contentWidth : rect.width;
-  const width = innerWidth + padding * 2;
+
+  // Cap the canvas to the viewport width. A fixed canvas wider than the screen
+  // is visually clamped by the global `canvas { max-width: 100% }` reset (and
+  // on iOS can expand the layout viewport) — both knock the text off-centre and
+  // cause the "jump to the side" on load. We instead clamp the width here and
+  // recompute the horizontal padding so the glyphs stay centred within whatever
+  // width we end up with, and the overlay never overflows the screen.
+  const width = Math.min(innerWidth + padding * 2, window.innerWidth);
+  const xPadding = (width - innerWidth) / 2; // centres the text inside the canvas
+
   const height = rect.height + padding * 2;
   overlayCssWidth = width;
 
@@ -379,7 +388,7 @@ function positionOverlay(heroEl, contentWidth) {
   overlayCanvas.style.left = `${overlayAnchorX(rect) - width / 2}px`;
   overlayCanvas.style.top = `${rect.top - padding}px`;
 
-  return { width, height, padding, rect };
+  return { width, height, padding, xPadding, rect };
 }
 
 /**
@@ -421,11 +430,11 @@ export function initTextParticles() {
   const widthA = measureTextWidth(phraseA, fontSize);
   const widthB = measureTextWidth(phraseB, fontSize);
   const sampleWidth = Math.ceil(Math.max(widthA, widthB)) + TEXT_WIDTH_BUFFER;
-  const { width, height, padding } = positionOverlay(heroElement, sampleWidth);
+  const { width, height, padding, xPadding } = positionOverlay(heroElement, sampleWidth);
 
   const sampleHeight = Math.ceil(height - padding * 2);
-  const positionsA = samplePhrasePositions(phraseA, fontSize, sampleWidth, sampleHeight, padding);
-  const positionsB = samplePhrasePositions(phraseB, fontSize, sampleWidth, sampleHeight, padding);
+  const positionsA = samplePhrasePositions(phraseA, fontSize, sampleWidth, sampleHeight, xPadding, padding);
+  const positionsB = samplePhrasePositions(phraseB, fontSize, sampleWidth, sampleHeight, xPadding, padding);
 
   if (positionsA.length === 0 || positionsB.length === 0) return;
 
@@ -606,10 +615,10 @@ function handleResize() {
   const widthA = measureTextWidth(phraseA, fontSize);
   const widthB = measureTextWidth(phraseB, fontSize);
   const sampleWidth = Math.ceil(Math.max(widthA, widthB)) + TEXT_WIDTH_BUFFER;
-  const { width, height, padding } = positionOverlay(heroElement, sampleWidth);
+  const { width, height, padding, xPadding } = positionOverlay(heroElement, sampleWidth);
   const sampleHeight = Math.ceil(height - padding * 2);
-  const positionsA = samplePhrasePositions(phraseA, fontSize, sampleWidth, sampleHeight, padding);
-  const positionsB = samplePhrasePositions(phraseB, fontSize, sampleWidth, sampleHeight, padding);
+  const positionsA = samplePhrasePositions(phraseA, fontSize, sampleWidth, sampleHeight, xPadding, padding);
+  const positionsB = samplePhrasePositions(phraseB, fontSize, sampleWidth, sampleHeight, xPadding, padding);
 
   if (positionsA.length === 0 || positionsB.length === 0) return;
 
