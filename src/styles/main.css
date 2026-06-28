@@ -1033,6 +1033,15 @@ body {
   );
 }
 
+/* Desktop: the hero is a left-aligned 55vw column offset by the gutter, so
+   left:50% would center within that column (left of screen). Anchor to the
+   true viewport center instead by cancelling out the hero's left offset. */
+@media (min-width: 769px) {
+  .scroll-indicator {
+    left: calc(50vw - var(--gutter));
+  }
+}
+
 /* ── Utility ── */
 .visually-hidden {
   position: absolute;

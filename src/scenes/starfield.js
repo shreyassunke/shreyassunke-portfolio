@@ -27,7 +27,7 @@ import { onTick } from '../core/renderer.js';
 // ── Configurable parameters ──
 const starfieldParams = {
   skyboxRotationSpeed: 0.00015,    // Autonomous skybox rotation speed
-  particleRotationSpeed: 0.0003,   // Autonomous particle rotation speed
+  particleRotationSpeed: 0.0001,   // Autonomous particle rotation speed (same direction as skybox, slightly slower for subtle parallax)
   heroCoupling: 0.08,              // How much hero rotation affects starfield (0–1)
   starCount: 4000,                 // Number of procedural particle stars
   skyboxRadius: 500,               // Radius of the skybox sphere
@@ -88,7 +88,9 @@ const starVertexShader = /* glsl */ `
 
     // Size attenuation — farther stars appear smaller
     gl_PointSize = aSize * uPixelRatio * (200.0 / -mvPosition.z);
-    gl_PointSize = clamp(gl_PointSize, 0.5, 8.0);
+    // Keep a minimum of ~1.5px: points smaller than a pixel rasterize
+    // unstably as they drift, causing the whole field to sparkle/flicker.
+    gl_PointSize = clamp(gl_PointSize, 1.5, 8.0);
 
     gl_Position = projectionMatrix * mvPosition;
 
@@ -195,7 +197,11 @@ function updateStarfield(elapsedTime, _deltaTime) {
 
   // ── Autonomous rotation ──
   skyboxBaseRotation.y += starfieldParams.skyboxRotationSpeed;
-  particleBaseRotation.y -= starfieldParams.particleRotationSpeed; // Counter-rotate for parallax
+  // Rotate the particle layer in the SAME direction as the skybox (just slower)
+  // so the two star layers read as one coherent field with gentle parallax.
+  // Counter-rotating them made the two starfields visibly slide against each
+  // other, which looked like flickering/glitching between two starfields.
+  particleBaseRotation.y += starfieldParams.particleRotationSpeed;
 
   // ── Hero coupling ──
   // Read the hero group's current rotation and apply a dampened fraction

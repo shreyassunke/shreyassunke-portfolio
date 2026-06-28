@@ -48,7 +48,7 @@ const TEXT_LETTER_SPACING_EM = -0.025; // matches --type-display-lg-ls in CSS
 const TEXT_WIDTH_BUFFER = 8;       // px of slack so the final glyph never clips
 
 // ── Morph timing ──
-const HOLD_DURATION = 5.0;         // seconds each phrase stays fully readable
+const HOLD_DURATION = 3.0;         // seconds each phrase stays fully readable
 const TRANSITION_DURATION = 1.15;  // seconds to cross-dissolve between phrases
 const MORPH_SCATTER = 0.28;        // fraction of each particle's random offset puffed mid-transition
 
