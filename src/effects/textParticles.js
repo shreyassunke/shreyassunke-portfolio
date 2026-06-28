@@ -305,9 +305,20 @@ function createOverlay() {
 
 // Mobile uses the centered hero layout (see the max-width:768px rules in
 // main.css). Keep this breakpoint in sync with that CSS.
-const mobileLayoutQuery = typeof window.matchMedia === 'function'
-  ? window.matchMedia('(max-width: 768px)')
-  : { matches: false };
+const MOBILE_BREAKPOINT = 768;
+
+/**
+ * Whether the centered (mobile) hero layout is active.
+ *
+ * NOTE: this is evaluated live off `window.innerWidth` on every call rather
+ * than caching a `MediaQueryList`. iOS Safari can report a stale `.matches`
+ * on a MediaQueryList that was created at module-load (before the viewport
+ * settles) and never given a listener — which made the overlay fall back to
+ * the desktop anchor and stick the text to one side on load.
+ */
+function isMobileLayout() {
+  return window.innerWidth <= MOBILE_BREAKPOINT;
+}
 
 /**
  * Horizontal centre the overlay should align to.
@@ -318,7 +329,7 @@ const mobileLayoutQuery = typeof window.matchMedia === 'function'
  *   intentional left-of-screen placement.
  */
 function overlayAnchorX(rect) {
-  if (mobileLayoutQuery.matches) {
+  if (isMobileLayout()) {
     return window.innerWidth / 2;
   }
   return rect.left + rect.width / 2;
