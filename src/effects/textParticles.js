@@ -115,8 +115,33 @@ const vertexShader = /* glsl */ `
     float sizeMult = (1.0 + force * 2.0) * (1.0 - transition * 0.25);
     gl_PointSize = aSize * sizeMult * uDPR;
 
+    // ── Lighting gradient ──
+    // Anchor the lighting to each particle's text-layout home (not its pushed
+    // position) so the gradient stays welded to the letters while they wobble.
+    vec2 npos = home.xy / uResolution; // 0..1 across the overlay
+
+    // Soft diagonal base light: brightest toward the upper-left, falling off
+    // toward the lower-right, like an off-screen key light.
+    float diag = clamp((npos.x * 0.45 + npos.y * 0.75), 0.0, 1.0);
+    float baseLight = mix(1.0, 0.66, diag);
+
+    // Specular highlight band that sweeps horizontally across the text on a
+    // seamless loop. The wrap makes the gaussian band re-enter from the left.
+    float sweepPos = fract(uTime * 0.12);
+    float sweepDist = abs(npos.x - sweepPos);
+    sweepDist = min(sweepDist, 1.0 - sweepDist);
+    float sweep = exp(-sweepDist * sweepDist * 70.0);
+
+    float brightness = clamp(baseLight + sweep * 0.5, 0.0, 1.0);
+
+    // Cool-white base, pure-white in the lit band, with a faint blue bloom
+    // riding the moving highlight so it reads as light rather than a color wash.
+    vec3 baseColor = vec3(0.80, 0.84, 0.92);
+    vec3 color = mix(baseColor, vec3(1.0), brightness);
+    color += sweep * vec3(0.10, 0.16, 0.30);
+
     // ── Color and Alpha ──
-    vColor = vec3(1.0, 1.0, 1.0); // Pure white text
+    vColor = color;
     vAlpha = morphAlpha;
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(finalPos, 1.0);
@@ -136,7 +161,8 @@ const fragmentShader = /* glsl */ `
     // Solid core to make particles overlap and create continuous shapes
     float alpha = smoothstep(0.5, 0.3, dist);
 
-    // Keep it pure white, brightness can be driven by vColor
+    // Per-particle lighting gradient (base diagonal light + moving sweep)
+    // arrives via vColor; alpha keeps the soft circular sprite falloff.
     gl_FragColor = vec4(vColor, alpha * vAlpha);
   }
 `;
