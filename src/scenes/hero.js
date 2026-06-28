@@ -14,6 +14,7 @@
 
 import * as THREE from 'three';
 import { scene } from '../core/scene.js';
+import { camera } from '../core/camera.js';
 import { onTick } from '../core/renderer.js';
 import { prefersReducedMotion } from '../utils/reducedMotion.js';
 
@@ -142,18 +143,63 @@ pointLight.position.set(heroParams.lightOrbitRadius, 0, 0);
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.08);
 
 // ── Mouse & Touch Interaction ──
+const DRAG_SENSITIVITY = 0.005;   // radians per pixel dragged
+const INERTIA_FRICTION = 0.94;    // how quickly a flick spins down
+const INERTIA_CUTOFF = 0.0004;    // velocity below which inertia stops
+
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
 const baseRotation = { x: 0, y: 0 };
 const currentRotation = { x: 0, y: 0 };
+// Flick-to-spin momentum, applied after the user lets go
+const rotationVelocity = { x: 0, y: 0 };
 let lastInteractionTime = Date.now();
 
 function resetIdleTimer() {
   lastInteractionTime = Date.now();
 }
 
+/**
+ * Test whether a screen point falls on (or near) the hero object.
+ * Projects the object's current world position to screen space so the
+ * hit zone follows the object as the scroll camera moves/scales it.
+ * Used on touch devices so dragging the object rotates it while dragging
+ * elsewhere still scrolls the page normally.
+ */
+const _projected = new THREE.Vector3();
+function isPointerOnObject(clientX, clientY) {
+  heroGroup.getWorldPosition(_projected);
+  _projected.project(camera);
+
+  // Behind the camera / outside the frustum depth → not interactable
+  if (_projected.z > 1) return false;
+
+  const screenX = (_projected.x * 0.5 + 0.5) * window.innerWidth;
+  const screenY = (-_projected.y * 0.5 + 0.5) * window.innerHeight;
+
+  // Generous, finger-friendly radius around the object's centre
+  const radius = Math.max(120, Math.min(window.innerWidth, window.innerHeight) * 0.32);
+
+  return Math.hypot(clientX - screenX, clientY - screenY) <= radius;
+}
+
+function applyDrag(deltaX, deltaY) {
+  const rotY = deltaX * DRAG_SENSITIVITY;
+  const rotX = deltaY * DRAG_SENSITIVITY;
+
+  baseRotation.y += rotY;
+  baseRotation.x += rotX;
+
+  // Track the latest movement as velocity for flick-to-spin momentum
+  rotationVelocity.y = rotY;
+  rotationVelocity.x = rotX;
+}
+
+// ── Mouse (desktop): drag anywhere to rotate ──
 function onMouseDown(event) {
   isDragging = true;
+  rotationVelocity.x = 0;
+  rotationVelocity.y = 0;
   resetIdleTimer();
   previousMousePosition = { x: event.clientX, y: event.clientY };
 }
@@ -166,28 +212,26 @@ function onMouseUp() {
 function onMouseMove(event) {
   resetIdleTimer();
   if (isDragging) {
-    const deltaMove = {
-      x: event.clientX - previousMousePosition.x,
-      y: event.clientY - previousMousePosition.y
-    };
-
-    // Drag rotation speed factor
-    baseRotation.y += deltaMove.x * 0.005;
-    baseRotation.x += deltaMove.y * 0.005;
-
+    applyDrag(
+      event.clientX - previousMousePosition.x,
+      event.clientY - previousMousePosition.y
+    );
     previousMousePosition = { x: event.clientX, y: event.clientY };
   }
 }
 
+// ── Touch (mobile): drag the object to rotate, scroll elsewhere ──
 function onTouchStart(event) {
-  if (event.touches.length === 1) {
-    isDragging = true;
-    resetIdleTimer();
-    previousMousePosition = {
-      x: event.touches[0].clientX,
-      y: event.touches[0].clientY
-    };
-  }
+  if (event.touches.length !== 1) return;
+
+  const touch = event.touches[0];
+  if (!isPointerOnObject(touch.clientX, touch.clientY)) return;
+
+  isDragging = true;
+  rotationVelocity.x = 0;
+  rotationVelocity.y = 0;
+  resetIdleTimer();
+  previousMousePosition = { x: touch.clientX, y: touch.clientY };
 }
 
 function onTouchEnd() {
@@ -196,21 +240,19 @@ function onTouchEnd() {
 }
 
 function onTouchMove(event) {
+  if (!isDragging || event.touches.length !== 1) return;
+
+  // We started on the object → take over the gesture and stop the
+  // page/Lenis from scrolling while the user spins it.
+  if (event.cancelable) event.preventDefault();
+
   resetIdleTimer();
-  if (isDragging && event.touches.length === 1) {
-    const deltaMove = {
-      x: event.touches[0].clientX - previousMousePosition.x,
-      y: event.touches[0].clientY - previousMousePosition.y
-    };
-
-    baseRotation.y += deltaMove.x * 0.005;
-    baseRotation.x += deltaMove.y * 0.005;
-
-    previousMousePosition = {
-      x: event.touches[0].clientX,
-      y: event.touches[0].clientY
-    };
-  }
+  const touch = event.touches[0];
+  applyDrag(
+    touch.clientX - previousMousePosition.x,
+    touch.clientY - previousMousePosition.y
+  );
+  previousMousePosition = { x: touch.clientX, y: touch.clientY };
 }
 
 /**
@@ -232,11 +274,13 @@ export function initHero() {
   window.addEventListener('mouseleave', onMouseUp);
   window.addEventListener('mousemove', onMouseMove, { passive: true });
 
-  // Listen for touch events
+  // Listen for touch events.
+  // touchmove is non-passive so we can preventDefault() to stop the page
+  // from scrolling while the user is spinning the object.
   window.addEventListener('touchstart', onTouchStart, { passive: true });
   window.addEventListener('touchend', onTouchEnd, { passive: true });
   window.addEventListener('touchcancel', onTouchEnd, { passive: true });
-  window.addEventListener('touchmove', onTouchMove, { passive: true });
+  window.addEventListener('touchmove', onTouchMove, { passive: false });
 
   // Register animation callback with the single render loop
   onTick(updateHero);
@@ -247,15 +291,22 @@ export function initHero() {
  * Handles idle rotation, click-and-drag, and light orbiting.
  */
 function updateHero(elapsedTime, deltaTime) {
-  // ── Idle rotation ──
-  const isIdle = (Date.now() - lastInteractionTime) > 2000;
-
-  if (!prefersReducedMotion && !isDragging) {
-    if (isIdle) {
-      // Faster constant rotation to spin 360 degrees when left idle
-      baseRotation.y += heroParams.rotationSpeed * 5;
-    } else {
-      baseRotation.y += heroParams.rotationSpeed;
+  if (!isDragging) {
+    // ── Flick-to-spin momentum ──
+    // Carry the user's release velocity, decaying with friction.
+    if (rotationVelocity.x !== 0 || rotationVelocity.y !== 0) {
+      baseRotation.y += rotationVelocity.y;
+      baseRotation.x += rotationVelocity.x;
+      rotationVelocity.y *= INERTIA_FRICTION;
+      rotationVelocity.x *= INERTIA_FRICTION;
+      if (Math.abs(rotationVelocity.y) < INERTIA_CUTOFF) rotationVelocity.y = 0;
+      if (Math.abs(rotationVelocity.x) < INERTIA_CUTOFF) rotationVelocity.x = 0;
+    } else if (!prefersReducedMotion) {
+      // ── Idle rotation (only once momentum has fully settled) ──
+      const isIdle = (Date.now() - lastInteractionTime) > 2000;
+      baseRotation.y += isIdle
+        ? heroParams.rotationSpeed * 5  // Faster constant spin when left idle
+        : heroParams.rotationSpeed;
     }
   }
 

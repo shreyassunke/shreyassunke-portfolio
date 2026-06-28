@@ -862,17 +862,27 @@ body {
     padding-bottom: var(--space-12);
   }
 
-  /* Make hero section take full width, push text down for top 3D model positioning */
+  /* Full-width, centered hero: 3D object sits up top, text centered below it */
   .hero {
     max-width: 100%;
     margin-left: 0;
+    align-items: center;
+    text-align: center;
     justify-content: flex-end;
     padding-top: var(--space-12);
-    padding-bottom: clamp(60px, 12vh, 120px);
+    padding-bottom: clamp(96px, 20vh, 200px);
   }
 
   .hero__name {
     font-size: clamp(2.2rem, 8vw, var(--type-display-lg-size));
+    white-space: normal;
+  }
+
+  /* Center the tagline (remove desktop optical left-offset) */
+  .hero__tagline {
+    padding-left: 0;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   /* Make containers tighter on mobile */

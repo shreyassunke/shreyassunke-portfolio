@@ -28,9 +28,19 @@ gsap.registerPlugin(ScrollTrigger);
 export function initScrollCamera() {
   if (prefersReducedMotion) {
     // For reduced motion, camera stays in a single position
-    // that works for all sections
-    camera.position.set(window.innerWidth < 768 ? 0 : 0.8, 0, 5);
-    camera.lookAt(window.innerWidth < 768 ? 0 : 0.8, 0, 0);
+    // that works for all sections. Also position the hero object
+    // explicitly per-viewport (no scroll animation will do it).
+    if (window.innerWidth < 768) {
+      // Centered, upper portion of the screen for the mobile stacked layout
+      heroGroup.position.set(0, 1.5, 0);
+      heroGroup.scale.set(0.7, 0.7, 0.7);
+      camera.position.set(0, 0.6, 5.5);
+      camera.lookAt(0, 0.6, 0);
+    } else {
+      heroGroup.position.set(2.5, 0.3, 0);
+      camera.position.set(0.8, 0, 5);
+      camera.lookAt(0.8, 0, 0);
+    }
     return;
   }
 
@@ -96,11 +106,12 @@ export function initScrollCamera() {
 
   // ── Mobile Setup (< 768px) ──
   mm.add("(max-width: 767px)", () => {
-    // Centered and higher up to complement mobile stacked layout
-    heroGroup.position.set(0, 1.2, 0);
+    // Horizontally centered, sitting in the upper portion so the
+    // centered hero text below it stays clear (balanced composition)
+    heroGroup.position.set(0, 1.5, 0);
     heroGroup.scale.set(0.7, 0.7, 0.7);
-    camera.position.set(0, 0.5, 5.5);
-    camera.lookAt(0, 0.5, 0);
+    camera.position.set(0, 0.6, 5.5);
+    camera.lookAt(0, 0.6, 0);
 
     const tl = gsap.timeline({
       scrollTrigger: {
