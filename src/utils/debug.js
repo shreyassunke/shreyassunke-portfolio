@@ -28,12 +28,10 @@ export function initDebug(effects) {
   bloomFolder.add(bloomEffect, 'intensity', 0, 3, 0.01).name('Intensity');
   bloomFolder.add(bloomEffect.luminanceMaterial, 'threshold', 0, 1, 0.01).name('Threshold');
   bloomFolder.add(bloomEffect.luminanceMaterial, 'smoothing', 0, 1, 0.01).name('Smoothing');
-  bloomFolder.open();
 
   // ── Film Grain Controls ──
   const grainFolder = gui.addFolder('Film Grain');
   grainFolder.add(noiseEffect.blendMode.opacity, 'value', 0, 0.2, 0.005).name('Intensity');
-  grainFolder.open();
 
   // ── Vignette Controls ──
   const vignetteFolder = gui.addFolder('Vignette');
@@ -48,12 +46,9 @@ export function initDebug(effects) {
   heroFolder.add(heroParams, 'lightIntensity', 0, 5, 0.1).name('Light Intensity');
   heroFolder.add(heroParams, 'cursorInfluence', 0, 2, 0.05).name('Cursor Influence');
   heroFolder.add(heroParams, 'lerpFactor', 0.01, 0.2, 0.005).name('Lerp Smoothing');
-  heroFolder.open();
 
-  // Collapse GUI by default on mobile screens to prevent cluttering
-  if (window.innerWidth < 768) {
-    gui.close();
-  }
+  // Collapse GUI by default so it doesn't obstruct the scene on load
+  gui.close();
 
   return gui;
 }
