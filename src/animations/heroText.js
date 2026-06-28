@@ -15,6 +15,7 @@
 
 import gsap from 'gsap';
 import { prefersReducedMotion } from '../utils/reducedMotion.js';
+import { initTextParticles } from '../effects/textParticles.js';
 
 /**
  * Split a text element into individual character spans.
@@ -74,6 +75,13 @@ export function initHeroText() {
   // ── Create the animation timeline ──
   const tl = gsap.timeline({
     delay: 0.5, // Brief pause before animation starts
+    onComplete: () => {
+      // Initialize particle hover effect after text is fully visible
+      // Small delay ensures the browser has painted the final text
+      requestAnimationFrame(() => {
+        initTextParticles();
+      });
+    },
   });
 
   // Stagger characters in

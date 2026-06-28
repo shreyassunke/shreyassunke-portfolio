@@ -181,11 +181,11 @@ export function initScrollCamera() {
     });
   });
 
-  // Experience items
-  gsap.utils.toArray('.experience-item').forEach((item, i) => {
+  // Experience & education items
+  gsap.utils.toArray('.experience-item, .education-item, .honors-item').forEach((item, i) => {
     gsap.from(item, {
       opacity: 0,
-      x: window.innerWidth < 768 ? -10 : -30, // Smaller horizontal offset on mobile to prevent clipping
+      x: window.innerWidth < 768 ? -10 : -30,
       duration: 0.6,
       ease: 'power2.out',
       scrollTrigger: {
@@ -193,7 +193,38 @@ export function initScrollCamera() {
         start: 'top 85%',
         toggleActions: 'play none none reverse',
       },
-      delay: i * 0.08,
+      delay: i * 0.06,
+    });
+  });
+
+  // Skills groups
+  gsap.utils.toArray('.skills-group').forEach((group, i) => {
+    gsap.from(group, {
+      opacity: 0,
+      y: 24,
+      duration: 0.6,
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: group,
+        start: 'top 88%',
+        toggleActions: 'play none none reverse',
+      },
+      delay: i * 0.05,
+    });
+  });
+
+  // Subsection titles
+  gsap.utils.toArray('.subsection__title').forEach((title) => {
+    gsap.from(title, {
+      opacity: 0,
+      y: 12,
+      duration: 0.5,
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: title,
+        start: 'top 88%',
+        toggleActions: 'play none none reverse',
+      },
     });
   });
 

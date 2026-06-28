@@ -6,7 +6,7 @@
 
     <!-- SEO -->
     <title>Shreyas Sunke — Builder, Strategist, Technologist</title>
-    <meta name="description" content="Portfolio of Shreyas Sunke — building at the intersection of AI, finance, and design. University of Washington iSchool, Informatics." />
+    <meta name="description" content="Portfolio of Shreyas Sunke — full-stack developer building AI products, marketplaces, and real-time intelligence platforms. BS Informatics, University of Washington." />
     <meta name="author" content="Shreyas Sunke" />
 
     <!-- Open Graph -->
@@ -55,23 +55,134 @@
         <span class="section__label">Selected Work</span>
         <h2 class="section__title">Projects</h2>
 
-        <div class="project-card">
-          <h3 class="project-card__title">ATLAS</h3>
-          <p class="project-card__description">A global intelligence platform for real-time geopolitical and financial signal aggregation, analysis, and decision support.</p>
-          <p class="project-card__meta">AI · Data Infrastructure · Intelligence</p>
-        </div>
+        <article class="project-card project-card--featured">
+          <a
+            href="https://atlasgi.vercel.app/"
+            class="project-card__link"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Visit ATLAS Global Intelligence"
+          >
+            <div class="project-card__body">
+              <div class="project-card__intro">
+                <img
+                  src="/assets/logos/atlas_logo.svg"
+                  alt="ATLAS"
+                  class="project-card__logo"
+                  width="40"
+                  height="40"
+                />
+                <div class="project-card__header">
+                  <span class="project-card__eyebrow">Global Intelligence</span>
+                  <h3 class="project-card__title">ATLAS</h3>
+                </div>
+              </div>
 
-        <div class="project-card">
-          <h3 class="project-card__title">Project Two</h3>
-          <p class="project-card__description">Description pending — curated project showcase.</p>
-          <p class="project-card__meta">Coming Soon</p>
-        </div>
+              <p class="project-card__description">
+                Every signal. One living globe. Open-source intelligence platform for real-time geopolitical and financial signal aggregation, visualization, and decision support — powered by GDELT, BigQuery, and an interactive 3D globe.
+              </p>
 
-        <div class="project-card">
-          <h3 class="project-card__title">Project Three</h3>
-          <p class="project-card__description">Description pending — curated project showcase.</p>
-          <p class="project-card__meta">Coming Soon</p>
-        </div>
+              <p class="project-card__meta">Founder &amp; Lead Developer · AI · OSINT · RAG</p>
+
+              <ul class="project-card__stack" aria-label="Technologies used">
+                <li><img src="/assets/logos/react.svg" alt="React" width="20" height="20" /></li>
+                <li><img src="/assets/logos/javascript.svg" alt="JavaScript" width="20" height="20" /></li>
+                <li><img src="/assets/logos/vite.svg" alt="Vite" width="20" height="20" /></li>
+                <li><img src="/assets/logos/threejs.svg" alt="Three.js" width="20" height="20" /></li>
+                <li><img src="/assets/logos/tailwind.svg" alt="Tailwind CSS" width="20" height="20" /></li>
+                <li><img src="/assets/logos/supabase.svg" alt="Supabase" width="20" height="20" /></li>
+                <li><img src="/assets/logos/nodejs.svg" alt="Node.js" width="20" height="20" /></li>
+              </ul>
+
+              <span class="project-card__cta" aria-hidden="true">Visit project →</span>
+            </div>
+
+            <div class="project-card__media">
+              <img
+                src="/assets/projects/atlas-thumbnail.png"
+                alt="ATLAS — Every signal. One living globe."
+                class="project-card__thumbnail"
+                width="640"
+                height="360"
+                loading="lazy"
+              />
+            </div>
+          </a>
+
+          <a
+            href="https://github.com/shreyassunke/atlas-global-intelligence"
+            class="project-card__github"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="View ATLAS source on GitHub"
+          >
+            <img src="/assets/logos/github.svg" alt="" width="20" height="20" />
+          </a>
+        </article>
+
+        <article class="project-card project-card--featured">
+          <a
+            href="https://greedyviz.streamlit.app/"
+            class="project-card__link"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Visit Greedy Graph Coloring Visualizer"
+          >
+            <div class="project-card__body">
+              <div class="project-card__intro">
+                <img
+                  src="/assets/logos/greedy_graph_logo.svg"
+                  alt="Greedy Graph Coloring"
+                  class="project-card__logo"
+                  width="40"
+                  height="40"
+                />
+                <div class="project-card__header">
+                  <span class="project-card__eyebrow">Graph Algorithms</span>
+                  <h3 class="project-card__title">Greedy Graph Coloring</h3>
+                </div>
+              </div>
+
+              <p class="project-card__description">
+                Interactive greedy graph coloring tool with a Streamlit dashboard — build adjacency matrices, run the algorithm in real time, and explore results through 2D and 3D visualizations with degree-based node sizing and dark/light mode.
+              </p>
+
+              <p class="project-card__meta">Graph Theory · Algorithms · Visualization</p>
+
+              <ul class="project-card__stack" aria-label="Technologies used">
+                <li><img src="/assets/logos/python.svg" alt="Python" width="20" height="20" /></li>
+                <li><img src="/assets/logos/streamlit.svg" alt="Streamlit" width="20" height="20" /></li>
+                <li><img src="/assets/logos/plotly.svg" alt="Plotly" width="20" height="20" /></li>
+                <li><img src="/assets/logos/networkx.svg" alt="NetworkX" width="20" height="20" /></li>
+                <li><img src="/assets/logos/numpy.svg" alt="NumPy" width="20" height="20" /></li>
+              </ul>
+
+              <span class="project-card__cta" aria-hidden="true">Visit project →</span>
+            </div>
+
+            <div class="project-card__media">
+              <img
+                src="/assets/projects/greedy-graph-coloring-thumbnail.png"
+                alt="Greedy Graph Coloring — 3D interactive visualization"
+                class="project-card__thumbnail"
+                width="640"
+                height="360"
+                loading="lazy"
+              />
+            </div>
+          </a>
+
+          <a
+            href="https://github.com/shreyassunke/Greedy-Graph-Coloring-Visualizer"
+            class="project-card__github"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="View Greedy Graph Coloring source on GitHub"
+          >
+            <img src="/assets/logos/github.svg" alt="" width="20" height="20" />
+          </a>
+        </article>
+
       </section>
 
       <!-- ── EXPERIENCE & EDUCATION ── -->
@@ -79,34 +190,200 @@
         <span class="section__label">Background</span>
         <h2 class="section__title">Experience &amp; Education</h2>
 
-        <!-- Education -->
-        <div class="education-item">
-          <h3 class="education-item__school">University of Washington — iSchool</h3>
-          <p class="education-item__degree">BS Informatics · Expected Autumn 2026</p>
+        <h3 class="subsection__title">Experience</h3>
+
+        <div class="experience-item experience-item--branded">
+          <img
+            src="/assets/logos/humn_logo.svg"
+            alt="HUMN AI"
+            class="experience-item__logo experience-item__logo--humn"
+            width="108"
+            height="30"
+          />
+          <div class="experience-item__body">
+            <div class="experience-item__header">
+              <h4 class="experience-item__role">Project Lead</h4>
+              <span class="experience-item__period">May 2025 — Present</span>
+            </div>
+            <p class="experience-item__org">HUMN AI · Remote</p>
+            <ul class="experience-item__details">
+              <li>Led cross-functional engineering team, defining full-stack architecture and CI/CD pipelines for an AI marketplace.</li>
+              <li>Architected Next.js, Node.js, MongoDB, and AWS S3 stack with sub-2s page loads across 50+ product pages.</li>
+              <li>Integrated Stripe payment APIs with webhook-driven fulfillment and PCI-compliant checkout for subscriptions and licensing.</li>
+            </ul>
+          </div>
         </div>
 
-        <div class="education-item">
-          <h3 class="education-item__school">Indiana University — Luddy School</h3>
-          <p class="education-item__degree">Informatics</p>
+        <div class="experience-item experience-item--branded">
+          <img
+            src="/assets/logos/professorai_logo.svg"
+            alt="ProfessorAI"
+            class="experience-item__logo experience-item__logo--professorai"
+            width="46"
+            height="40"
+          />
+          <div class="experience-item__body">
+            <div class="experience-item__header">
+              <h4 class="experience-item__role">Head of Business Operations, VP of Marketing, Project Manager</h4>
+              <span class="experience-item__period">Nov 2023 — Jun 2024</span>
+            </div>
+            <p class="experience-item__org">ProfessorAI · Seattle, WA</p>
+            <ul class="experience-item__details">
+              <li>Coordinated a 6-member engineering and content team to ship 32 AP courses with AI-assisted workflows.</li>
+              <li>Built LaTeX/KaTeX formatting pipelines that accelerated course delivery throughput.</li>
+              <li>Owned product operations and go-to-market execution across technical and nontechnical stakeholders.</li>
+            </ul>
+          </div>
         </div>
 
-        <!-- Experience -->
-        <div class="experience-item">
-          <h3 class="experience-item__role">Role Title</h3>
-          <p class="experience-item__org">Company · Finance</p>
-          <p class="experience-item__period">2024 — Present</p>
+        <h3 class="subsection__title">Leadership &amp; Research</h3>
+
+        <div class="experience-item experience-item--branded">
+          <img
+            src="/assets/logos/iu_logo.svg"
+            alt="Indiana University"
+            class="experience-item__logo experience-item__logo--iu"
+            width="32"
+            height="40"
+          />
+          <div class="experience-item__body">
+            <div class="experience-item__header">
+              <h4 class="experience-item__role">Undergraduate Research Assistant</h4>
+              <span class="experience-item__period">Jan 2025 — May 2025</span>
+            </div>
+            <p class="experience-item__org">IU Data Science &amp; AI Lab (DSAIL) · Bloomington, IN</p>
+            <ul class="experience-item__details">
+              <li>Engineered agentic skill-scraping pipeline on Quartz HPC cluster (SLURM) with normalized data schema for AI competency records.</li>
+            </ul>
+          </div>
         </div>
 
-        <div class="experience-item">
-          <h3 class="experience-item__role">Role Title</h3>
-          <p class="experience-item__org">Company · Consulting</p>
-          <p class="experience-item__period">2023 — 2024</p>
+        <div class="experience-item experience-item--branded">
+          <img
+            src="/assets/logos/ktp_logo.svg"
+            alt="Kappa Theta Pi"
+            class="experience-item__logo experience-item__logo--mark"
+            width="40"
+            height="40"
+          />
+          <div class="experience-item__body">
+            <div class="experience-item__header">
+              <h4 class="experience-item__role">National Director of Finance &amp; Chapter VP of Finance</h4>
+              <span class="experience-item__period">Jan 2025 — May 2026</span>
+            </div>
+            <p class="experience-item__org">Kappa Theta Pi Professional Tech Fraternity · Bloomington, IN</p>
+            <ul class="experience-item__details">
+              <li>Established fraternity financial infrastructure — banking, standardized budgeting, and treasury reporting.</li>
+            </ul>
+          </div>
         </div>
 
-        <div class="experience-item">
-          <h3 class="experience-item__role">Role Title</h3>
-          <p class="experience-item__org">Company · AI</p>
-          <p class="experience-item__period">2023 — Present</p>
+        <h3 class="subsection__title">Education</h3>
+
+        <div class="education-item education-item--branded">
+          <img
+            src="/assets/logos/uw_logo.svg"
+            alt="University of Washington"
+            class="experience-item__logo experience-item__logo--uw"
+            width="40"
+            height="28"
+          />
+          <div class="experience-item__body">
+            <div class="experience-item__header">
+              <h4 class="education-item__school">University of Washington</h4>
+              <span class="experience-item__period">Expected Jun 2028</span>
+            </div>
+            <p class="education-item__degree">Bachelor of Science in Informatics · Seattle, WA</p>
+          </div>
+        </div>
+
+        <div class="education-item education-item--branded">
+          <img
+            src="/assets/logos/iu_logo.svg"
+            alt="Indiana University"
+            class="experience-item__logo experience-item__logo--iu"
+            width="32"
+            height="40"
+          />
+          <div class="experience-item__body">
+            <div class="experience-item__header">
+              <h4 class="education-item__school">Indiana University</h4>
+              <span class="experience-item__period">Aug 2024 — May 2026</span>
+            </div>
+            <p class="education-item__degree">Bachelor of Science in Business &amp; Informatics · GPA 3.8 · Bloomington, IN</p>
+          </div>
+        </div>
+
+        <div class="honors-item honors-item--branded">
+          <img
+            src="/assets/logos/honors_logo.svg"
+            alt=""
+            class="experience-item__logo experience-item__logo--mark"
+            width="40"
+            height="40"
+            aria-hidden="true"
+          />
+          <div class="experience-item__body">
+            <p class="honors-item__label">Honors</p>
+            <p class="honors-item__text">Dean's List · DECA ICDC Nationals · Antler Spring '24 Cohort</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── SKILLS ── -->
+      <section id="skills" class="section skills" aria-label="Skills">
+        <span class="section__label">Capabilities</span>
+        <h2 class="section__title">Skills</h2>
+
+        <div class="skills-group">
+          <h3 class="skills-group__label">Languages</h3>
+          <ul class="skills-group__tags">
+            <li>JavaScript</li>
+            <li>TypeScript</li>
+            <li>Python</li>
+            <li>SQL</li>
+            <li>HTML/CSS</li>
+          </ul>
+        </div>
+
+        <div class="skills-group">
+          <h3 class="skills-group__label">Frameworks &amp; Libraries</h3>
+          <ul class="skills-group__tags">
+            <li>React</li>
+            <li>Next.js</li>
+            <li>Node.js</li>
+            <li>REST APIs</li>
+            <li>Cesium</li>
+            <li>globe.gl</li>
+          </ul>
+        </div>
+
+        <div class="skills-group">
+          <h3 class="skills-group__label">Tools &amp; Platforms</h3>
+          <ul class="skills-group__tags">
+            <li>MongoDB</li>
+            <li>Vector DB</li>
+            <li>Supabase</li>
+            <li>AWS S3</li>
+            <li>Git</li>
+            <li>CI/CD</li>
+            <li>Stripe</li>
+            <li>Clerk</li>
+          </ul>
+        </div>
+
+        <div class="skills-group">
+          <h3 class="skills-group__label">Concepts</h3>
+          <ul class="skills-group__tags">
+            <li>System Design</li>
+            <li>Distributed Systems</li>
+            <li>RAG</li>
+            <li>LLM APIs</li>
+            <li>Semantic Search</li>
+            <li>Full-Stack Development</li>
+            <li>Product Strategy</li>
+            <li>SaaS</li>
+          </ul>
         </div>
       </section>
 
@@ -115,34 +392,33 @@
         <h2 class="contact__heading">Let's connect.</h2>
         <p class="contact__text">Open to new opportunities, collaborations, and conversations about technology and strategy.</p>
 
-        <!-- Contact Form -->
-        <form class="contact__form" id="contact-form" onsubmit="event.preventDefault(); alert('Message sent successfully (demonstration only)!');">
-          <div class="contact__form-row">
-            <div class="contact__form-group">
-              <label for="name" class="contact__form-label">Name</label>
-              <input type="text" id="name" name="name" class="contact__form-input" placeholder="Your Name" required />
-            </div>
-            <div class="contact__form-group">
-              <label for="email" class="contact__form-label">Email</label>
-              <input type="email" id="email" name="email" class="contact__form-input" placeholder="name@company.com" required />
-            </div>
-          </div>
-          <div class="contact__form-group">
-            <label for="message" class="contact__form-label">Message</label>
-            <textarea id="message" name="message" class="contact__form-input contact__form-textarea" placeholder="Describe your project, role, or proposal..." rows="4" required></textarea>
-          </div>
-          <button type="submit" class="contact__form-submit">Send Message</button>
-        </form>
-
         <div class="contact__socials">
-          <a href="mailto:shreyas@example.com" class="contact__link" aria-label="Send email">
-            Email
+          <a
+            href="https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=shreyassunke005@gmail.com"
+            class="contact__icon-link"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Send email"
+          >
+            <img src="/assets/logos/email.svg" alt="Email" width="24" height="24" />
           </a>
-          <a href="https://linkedin.com/in/" class="contact__link" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn profile">
-            LinkedIn
+          <a
+            href="https://www.linkedin.com/in/ssunke"
+            class="contact__icon-link"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="LinkedIn profile"
+          >
+            <img src="/assets/logos/linkedin.svg" alt="LinkedIn" width="24" height="24" />
           </a>
-          <a href="https://github.com/" class="contact__link" target="_blank" rel="noopener noreferrer" aria-label="GitHub profile">
-            GitHub
+          <a
+            href="https://github.com/shreyassunke"
+            class="contact__icon-link"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub profile"
+          >
+            <img src="/assets/logos/github.svg" alt="GitHub" width="24" height="24" />
           </a>
         </div>
       </section>

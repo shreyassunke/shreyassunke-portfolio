@@ -8,13 +8,13 @@
 
 export function initHoverGlow() {
   const selectors = [
-    '.contact__form',
-    '.contact__form-input',
-    '.contact__form-submit',
     '.contact__link',
     '.project-card',
+    '.project-card__github',
     '.experience-item',
-    '.education-item'
+    '.education-item',
+    '.honors-item',
+    '.skills-group'
   ];
 
   const updateCoordinates = (e, el) => {
