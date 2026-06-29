@@ -858,6 +858,30 @@ body {
   border-color: rgba(255, 255, 255, 0.18);
 }
 
+/* ── Resume Section ── */
+.resume {
+  padding-top: var(--space-32);
+  padding-bottom: var(--space-32);
+}
+
+/* Anchor the document preview to its top so the name/header is always visible */
+.resume-card__media {
+  min-height: 360px;
+  background: #ffffff;
+}
+
+.resume-card__thumbnail {
+  object-position: center top;
+  min-height: 360px;
+}
+
+@media (max-width: 768px) {
+  .resume-card__media,
+  .resume-card__thumbnail {
+    min-height: 300px;
+  }
+}
+
 /* ── Contact Section ── */
 .contact {
   padding-top: var(--space-32);
