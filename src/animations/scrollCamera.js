@@ -254,21 +254,6 @@ export function initScrollCamera() {
     });
   });
 
-  // Section labels
-  gsap.utils.toArray('.section__label').forEach((label) => {
-    gsap.from(label, {
-      opacity: 0,
-      y: 10,
-      duration: 0.6,
-      ease: 'power2.out',
-      scrollTrigger: {
-        trigger: label,
-        start: 'top 85%',
-        toggleActions: 'play none none reverse',
-      },
-    });
-  });
-
   // Contact section
   const contactHeading = document.querySelector('.contact__heading');
   if (contactHeading) {

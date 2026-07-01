@@ -7,6 +7,7 @@
   --color-bg:               #000000;
   --color-primary:          #FFFFFF;
   --color-muted:            #888888;
+  --color-subhead:          #999999; /* hero role line — between muted and primary */
   --color-accent-glow:      rgba(255, 255, 255, 0.15);
   --color-accent-border:    rgba(255, 255, 255, 0.25);
   --color-accent-highlight: rgba(255, 255, 255, 0.4);

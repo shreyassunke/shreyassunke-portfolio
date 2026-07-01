@@ -15,7 +15,7 @@
 
 import gsap from 'gsap';
 import { prefersReducedMotion } from '../utils/reducedMotion.js';
-import { initTextParticles } from '../effects/textParticles.js';
+import { initTextParticles, initHeroNameParticles } from '../effects/textParticles.js';
 
 /**
  * Split a text element into individual character spans.
@@ -58,33 +58,36 @@ function splitTextIntoChars(element) {
  */
 export function initHeroText() {
   const heroName = document.querySelector('.hero__name');
-  const heroTagline = document.querySelector('.hero__tagline');
+  const heroSubhead = document.querySelector('.hero__subhead');
 
   if (!heroName) return;
 
   // ── Reduced motion: show everything immediately ──
   if (prefersReducedMotion) {
     heroName.style.opacity = '1';
-    if (heroTagline) heroTagline.style.opacity = '1';
+    // Show the first role word statically (no particle rotation).
+    if (heroSubhead) heroSubhead.style.opacity = '1';
     return;
   }
 
-  // ── Split name into characters ──
+  // ── Split name into characters (static reveal, then it just stays) ──
   const chars = splitTextIntoChars(heroName);
 
   // ── Create the animation timeline ──
   const tl = gsap.timeline({
     delay: 0.5, // Brief pause before animation starts
     onComplete: () => {
-      // Initialize particle hover effect after text is fully visible
-      // Small delay ensures the browser has painted the final text
+      // Hand the subheading over to the particle system once the name has
+      // settled. Small delay ensures the browser has painted the final text
+      // so the sampler measures the correct glyph metrics.
       requestAnimationFrame(() => {
+        initHeroNameParticles();
         initTextParticles();
       });
     },
   });
 
-  // Stagger characters in
+  // Stagger the name characters in — the name then remains static.
   tl.to(chars, {
     opacity: 1,
     y: 0,
@@ -93,10 +96,10 @@ export function initHeroText() {
     stagger: 0.03,
   });
 
-  // NOTE: the tagline ("Software Developer") is intentionally NOT faded in
-  // anymore — the particle headline now morphs between the name and the role,
-  // so the tagline stays visually hidden (opacity:0) and exists purely for
-  // screen readers / SEO. See textParticles.js for the morph.
+  // NOTE: the subheading (Builder / Strategist / Operator) is NOT faded in via
+  // GSAP — the particle system owns it and morphs between the three roles.
+  // Its HTML stays visually hidden (opacity:0) as a screen-reader/SEO fallback.
+  // See textParticles.js for the rotation.
 
   // Fade in scroll indicator
   const scrollIndicator = document.querySelector('.scroll-indicator');

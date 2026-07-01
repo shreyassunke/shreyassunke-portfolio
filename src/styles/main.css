@@ -274,7 +274,7 @@ body {
   line-height: 1.05;
   letter-spacing: var(--type-display-lg-ls);
   color: var(--color-primary);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
   white-space: nowrap;
   /* padding-bottom exposes descenders (y, g, p…) within the clip boundary */
   padding-bottom: 0.15em;
@@ -308,32 +308,29 @@ body {
   max-width: none;
 }
 
-.hero__tagline {
+/* ── Hero Subheading (particle-morph role rotator) ── */
+.hero__subhead {
+  /* Secondary line: label-scale type, muted gray, wide-tracked caps */
   font-family: var(--font-body);
-  font-size: var(--type-body-md-size);
-  font-weight: var(--type-body-md-weight);
-  line-height: var(--type-body-md-lh);
-  color: var(--color-muted);
-  letter-spacing: var(--tracking-wide);
+  font-size: clamp(0.8125rem, 1.35vw, 0.9375rem);
+  font-weight: var(--weight-medium);
+  line-height: 1.4;
+  letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
-  /* Optically align with the start of the hero name glyph above */
-  padding-left: 0.35em;
-  max-width: 600px;
+  color: var(--color-subhead);
+  align-self: flex-start;
+  text-align: left;
+  width: auto;
+  margin-top: 0;
+  /* Optical nudge so caps line up with the name glyph above */
+  margin-left: 0.35em;
+  pointer-events: auto;
+  cursor: pointer;
   opacity: 0;
+  white-space: nowrap;
 }
 
 /* ── Section Headers ── */
-.section__label {
-  font-family: var(--font-body);
-  font-size: var(--type-label-md-size);
-  font-weight: var(--type-label-md-weight);
-  line-height: var(--type-label-md-lh);
-  color: var(--color-muted);
-  letter-spacing: var(--tracking-wider);
-  text-transform: uppercase;
-  margin-bottom: var(--space-3);
-}
-
 .section__title {
   font-family: var(--font-display);
   font-size: var(--text-3xl);
@@ -1122,11 +1119,13 @@ body {
     text-align: center;
   }
 
-  /* Center the tagline (remove desktop optical left-offset) */
-  .hero__tagline {
-    padding-left: 0;
+  /* Subheading stays centered on mobile, slightly larger for legibility */
+  .hero__subhead {
+    align-self: center;
     width: 100%;
     text-align: center;
+    font-size: clamp(0.8125rem, 2.5vw, 0.875rem);
+    margin-left: 0;
   }
 
   /* Make containers tighter on mobile */
